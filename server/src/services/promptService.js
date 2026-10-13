@@ -57,6 +57,7 @@ ${clientRequest}
 6. Provide an honest, realistic development time estimate.
 7. Provide an approximate freelance pricing estimate in Indian Rupees (INR) reflecting industry rates.
 8. Write a polite, persuasive, and professional proposal letter that the freelancer can directly send to the client.
+9. Create an intuitive system & user journey flowchart. Provide both a valid Mermaid.js flowchart string (using "graph TD") and structured sequential steps to give the client complete clarity.
 
 ### REQUIRED OUTPUT FORMAT:
 You MUST output ONLY a valid JSON object matching the schema below. Do NOT include markdown code blocks, do NOT add introductory text, and do NOT add any closing remarks.
@@ -87,7 +88,28 @@ You MUST output ONLY a valid JSON object matching the schema below. Do NOT inclu
   ],
   "timeEstimate": "e.g., 3 - 4 Weeks (approx. 70-90 hours)",
   "pricingEstimate": "e.g., ₹45,000 - ₹65,000 INR",
-  "proposal": "Professional, polite client proposal starting with greeting, demonstrating understanding of their goals, highlighting the approach, timeline, and inviting a kickoff discussion."
+  "proposal": "Professional, polite client proposal starting with greeting, demonstrating understanding of their goals, highlighting the approach, timeline, and inviting a kickoff discussion.",
+  "flowchart": "graph TD;\n  A[Client / User Request] --> B[Frontend Interface];\n  B --> C[API Server & Validation];\n  C --> D[(MongoDB Database)];\n  C --> E[3rd Party Services / Payments];\n  D --> F[Response to User];",
+  "flowchartSteps": [
+    {
+      "step": "1",
+      "actor": "Client / User",
+      "action": "Initiates action on client application",
+      "outcome": "Sends secure request to backend API"
+    },
+    {
+      "step": "2",
+      "actor": "Backend Service",
+      "action": "Authenticates and executes business logic",
+      "outcome": "Queries or updates database record"
+    },
+    {
+      "step": "3",
+      "actor": "Database / Integration",
+      "action": "Performs persistence or external API communication",
+      "outcome": "Confirms data integrity and returns response"
+    }
+  ]
 }`;
 };
 
@@ -160,7 +182,43 @@ export const validateAndNormalizeAnalysis = (rawData) => {
     proposal: cleanString(
       rawData.proposal,
       'Thank you for sharing your project requirements. Based on the scope outlined, I have prepared a detailed execution plan.'
-    )
+    ),
+    flowchart: cleanString(
+      rawData.flowchart,
+      `graph TD;
+  A[Client Request / Brief] --> B[Frontend Interface];
+  B --> C[API Server & Validation];
+  C --> D[(MongoDB Database)];
+  C --> E[External Services & APIs];
+  D --> F[Success Response to User];`
+    ),
+    flowchartSteps: Array.isArray(rawData.flowchartSteps) && rawData.flowchartSteps.length > 0
+      ? rawData.flowchartSteps.map((step, idx) => ({
+          step: String(step.step || idx + 1),
+          actor: cleanString(step.actor, 'System Actor'),
+          action: cleanString(step.action, 'Executes workflow action'),
+          outcome: cleanString(step.outcome, 'Proceeds to next milestone')
+        }))
+      : [
+          {
+            step: '1',
+            actor: 'End User / Client',
+            action: 'Submits project brief or triggers feature action',
+            outcome: 'Sends request to backend API'
+          },
+          {
+            step: '2',
+            actor: 'Backend Server',
+            action: 'Validates input and applies business logic',
+            outcome: 'Queries database or invokes third-party integration'
+          },
+          {
+            step: '3',
+            actor: 'Database / MongoDB',
+            action: 'Stores structured data and verifies transaction integrity',
+            outcome: 'Returns verified record to frontend UI'
+          }
+        ]
   };
 
   // Check critical fields
@@ -174,3 +232,124 @@ export const validateAndNormalizeAnalysis = (rawData) => {
     errors
   };
 };
+
+/**
+ * Parses a single unified prompt containing structured key-value lines
+ * or free-form text into individual project fields.
+ * @param {string} text - Raw input prompt
+ * @returns {Object} Extracted project attributes
+ */
+export const parseUnifiedPrompt = (text) => {
+  if (!text || typeof text !== 'string') return {};
+
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  const result = {
+    title: '',
+    clientRequest: '',
+    budget: undefined,
+    deadline: undefined,
+    preferredTechnologies: undefined,
+    additionalContext: undefined
+  };
+
+  let currentKey = null;
+  const sections = {};
+
+  for (const line of lines) {
+    const match = line.match(
+      /^(title|project\s*title|description|requirements|brief|budget|deadline|timeline|tech|technologies|stack|notes|context)\s*[:=-]\s*(.*)$/i
+    );
+    if (match) {
+      const rawKey = match[1].toLowerCase().replace(/\s+/g, '');
+      const content = match[2].trim();
+
+      if (rawKey.includes('title')) currentKey = 'title';
+      else if (rawKey.includes('desc') || rawKey.includes('require') || rawKey.includes('brief'))
+        currentKey = 'description';
+      else if (rawKey.includes('budget')) currentKey = 'budget';
+      else if (rawKey.includes('deadline') || rawKey.includes('time')) currentKey = 'deadline';
+      else if (rawKey.includes('tech') || rawKey.includes('stack')) currentKey = 'tech';
+      else if (rawKey.includes('note') || rawKey.includes('context')) currentKey = 'context';
+
+      sections[currentKey] =
+        (sections[currentKey] || '') + (content ? (sections[currentKey] ? '\n' : '') + content : '');
+    } else if (currentKey) {
+      sections[currentKey] = (sections[currentKey] || '') + '\n' + line;
+    }
+  }
+
+  if (sections.title) result.title = sections.title.trim();
+  if (sections.description) result.clientRequest = sections.description.trim();
+  if (sections.budget) {
+    const num = sections.budget.replace(/[^0-9]/g, '');
+    if (num) result.budget = Number(num);
+  }
+  if (sections.deadline) result.deadline = sections.deadline.trim();
+  if (sections.tech) result.preferredTechnologies = sections.tech.trim();
+  if (sections.context) result.additionalContext = sections.context.trim();
+
+  // If no labeled headers were found, treat first line as title and remaining as description
+  if (!result.title && !result.clientRequest) {
+    if (lines.length > 0) {
+      result.title = lines[0].replace(/^#+\s*/, '').slice(0, 80);
+      result.clientRequest = lines.slice(1).join('\n').trim() || lines[0];
+    }
+  } else if (!result.title && result.clientRequest) {
+    result.title = result.clientRequest.split('\n')[0].slice(0, 60) || 'Client Project Request';
+  } else if (result.title && !result.clientRequest) {
+    result.clientRequest = result.title;
+  }
+
+  return result;
+};
+
+/**
+ * Builds the prompt for Gemma to answer follow-up questions about a project.
+ * @param {Object} params
+ * @param {string} params.question - Follow-up question from freelancer
+ * @param {Object} [params.previousAnalysis] - Existing analysis context
+ * @param {string} [params.projectTitle] - Project title
+ * @param {Array} [params.chatHistory] - Array of previous messages [{role, content}]
+ * @returns {string} Formatted follow-up prompt
+ */
+export const buildFollowUpPrompt = ({
+  question,
+  previousAnalysis,
+  projectTitle,
+  chatHistory = []
+}) => {
+  const analysisContext = previousAnalysis
+    ? `
+### EXISTING PROJECT ANALYSIS CONTEXT:
+- **Project Title**: ${projectTitle || 'Project'}
+- **Summary**: ${previousAnalysis.summary || 'N/A'}
+- **Tech Stack**: ${JSON.stringify(previousAnalysis.techStack || {})}
+- **Requirements**: ${(previousAnalysis.requirements || []).join('; ')}
+- **Estimated Timeline**: ${previousAnalysis.timeEstimate || 'N/A'}
+- **Estimated Pricing**: ${previousAnalysis.pricingEstimate || 'N/A'}
+`
+    : '';
+
+  const formattedHistory =
+    chatHistory && chatHistory.length > 0
+      ? `\n### PREVIOUS CONVERSATION:\n${chatHistory
+          .map((m) => `${m.role === 'user' ? 'Freelancer' : 'AI Assistant'}: ${m.content}`)
+          .join('\n')}\n`
+      : '';
+
+  return `You are FreelancerMate AI, a senior solutions architect and veteran freelance strategy consultant.
+You are helping a freelancer scope, refine, and deliver a client project.
+
+${analysisContext}
+${formattedHistory}
+
+### FREELANCER'S FOLLOW-UP QUESTION:
+"${question}"
+
+### INSTRUCTIONS:
+- Answer the freelancer's question directly, practically, and professionally.
+- Provide clear technical details, trade-offs, code considerations, or client communication tips where relevant.
+- Keep the response organized with clear headings or bullet points if explaining multiple items.
+- If the freelancer is asking to adjust the scope, timeline, tech stack, or budget, provide clear recommendations and rationale.`;
+};
+

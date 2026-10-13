@@ -93,3 +93,55 @@ export const getUserById = async (req, res) => {
     });
   }
 };
+
+// @desc    Authenticate user & login
+// @route   POST /api/users/login
+// @access  Public
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide both email and password'
+      });
+    }
+
+    // Find user with password included
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Verify password
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        age: user.age,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+

@@ -1,5 +1,14 @@
-import { checkOllamaHealth, generateWithGemma } from '../services/ollamaService.js';
-import { buildAnalysisPrompt, validateAndNormalizeAnalysis } from '../services/promptService.js';
+import {
+  checkOllamaHealth,
+  generateWithGemma,
+  generateFollowUpReply
+} from '../services/ollamaService.js';
+import {
+  buildAnalysisPrompt,
+  validateAndNormalizeAnalysis,
+  parseUnifiedPrompt,
+  buildFollowUpPrompt
+} from '../services/promptService.js';
 import Project from '../models/Project.js';
 
 /**
@@ -31,6 +40,7 @@ export const getAiStatus = async (req, res) => {
 export const analyzeProject = async (req, res) => {
   try {
     const {
+      prompt: unifiedPrompt,
       title,
       projectTitle,
       clientRequest,
@@ -44,15 +54,37 @@ export const analyzeProject = async (req, res) => {
       userId
     } = req.body;
 
-    // Normalize field aliases
-    const resolvedTitle = (title || projectTitle || '').trim();
-    const resolvedRequest = (clientRequest || clientRequirements || '').trim();
+    // 1. Extract from unified single prompt if supplied
+    let parsedFields = {};
+    if (unifiedPrompt && typeof unifiedPrompt === 'string') {
+      parsedFields = parseUnifiedPrompt(unifiedPrompt);
+    }
 
-    // 1. Input Validation
+    // 2. Normalize field aliases with fallback to unified prompt parsing
+    const resolvedTitle = (
+      title ||
+      projectTitle ||
+      parsedFields.title ||
+      ''
+    ).trim();
+
+    const resolvedRequest = (
+      clientRequest ||
+      clientRequirements ||
+      parsedFields.clientRequest ||
+      ''
+    ).trim();
+
+    const resolvedBudget = budget !== undefined ? budget : parsedFields.budget;
+    const resolvedDeadline = deadline || parsedFields.deadline;
+    const resolvedTech = preferredTechnologies || parsedFields.preferredTechnologies;
+    const resolvedContext = additionalContext || parsedFields.additionalContext;
+
+    // 3. Input Validation
     if (!resolvedTitle) {
       return res.status(400).json({
         success: false,
-        message: "Validation Error: 'title' (or 'projectTitle') is required."
+        message: "Validation Error: 'title' (or project title in prompt) is required."
       });
     }
 
@@ -60,18 +92,18 @@ export const analyzeProject = async (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Validation Error: 'clientRequest' (or 'clientRequirements') is required and must contain at least 10 characters."
+          "Validation Error: 'clientRequest' (or description in prompt) is required and must contain at least 10 characters."
       });
     }
 
-    // 2. Build Structured Prompt for Gemma
+    // 4. Build Structured Prompt for Gemma
     const prompt = buildAnalysisPrompt({
       title: resolvedTitle,
       clientRequest: resolvedRequest,
-      budget,
-      deadline,
-      preferredTechnologies,
-      additionalContext
+      budget: resolvedBudget,
+      deadline: resolvedDeadline,
+      preferredTechnologies: resolvedTech,
+      additionalContext: resolvedContext
     });
 
     // 3. Call Ollama Service with Gemma
@@ -141,3 +173,48 @@ export const analyzeProject = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Answer freelancer follow-up questions regarding the analyzed project
+ * @route   POST /api/ai/follow-up
+ * @access  Public
+ */
+export const askFollowUp = async (req, res) => {
+  try {
+    const { question, previousAnalysis, projectTitle, chatHistory } = req.body;
+
+    if (!question || !question.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation Error: 'question' is required."
+      });
+    }
+
+    const prompt = buildFollowUpPrompt({
+      question: question.trim(),
+      previousAnalysis,
+      projectTitle,
+      chatHistory: Array.isArray(chatHistory) ? chatHistory : []
+    });
+
+    const answer = await generateFollowUpReply(prompt);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Follow-up question answered successfully',
+      data: {
+        question: question.trim(),
+        answer
+      }
+    });
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+    console.error(`AI Follow-Up Error [${statusCode}]:`, error.message);
+
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+

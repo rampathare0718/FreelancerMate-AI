@@ -102,6 +102,16 @@ export const generateWithGemma = async (prompt) => {
     }
   };
 
+  // Fast pre-check: ensure Ollama is reachable without waiting for TCP timeout
+  const health = await checkOllamaHealth();
+  if (!health.isOnline) {
+    const err = new Error(
+      `Cannot connect to Ollama daemon at ${baseUrl}. Please ensure Ollama is installed and running (run "ollama serve" in your terminal).`
+    );
+    err.statusCode = 503;
+    throw err;
+  }
+
   let responseText = '';
 
   try {
@@ -183,3 +193,84 @@ export const generateWithGemma = async (prompt) => {
     throw err;
   }
 };
+
+/**
+ * Sends a conversational follow-up generation request to the Gemma model via Ollama.
+ * @param {string} prompt - Follow-up prompt with context
+ * @returns {Promise<string>} Text answer from Gemma
+ */
+export const generateFollowUpReply = async (prompt) => {
+  const baseUrl = getOllamaBaseUrl();
+  const model = getGemmaModelName();
+  const timeoutMs = getOllamaTimeoutMs();
+
+  const payload = {
+    model,
+    prompt,
+    stream: false,
+    options: {
+      temperature: 0.4
+    }
+  };
+
+  // Fast pre-check: ensure Ollama is reachable without waiting for TCP timeout
+  const health = await checkOllamaHealth();
+  if (!health.isOnline) {
+    const err = new Error(
+      `Cannot connect to Ollama daemon at ${baseUrl}. Please ensure Ollama is installed and running (run "ollama serve" in your terminal).`
+    );
+    err.statusCode = 503;
+    throw err;
+  }
+
+  try {
+    const signal = AbortSignal.timeout(timeoutMs);
+
+    const res = await fetch(`${baseUrl}/api/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload),
+      signal
+    });
+
+    if (!res.ok) {
+      const errorBody = await res.text().catch(() => '');
+      if (res.status === 404) {
+        const err = new Error(
+          `Gemma model "${model}" is not installed in Ollama. Please run "ollama pull ${model}" in your terminal.`
+        );
+        err.statusCode = 404;
+        throw err;
+      }
+
+      const err = new Error(
+        `Ollama API error (${res.status} ${res.statusText}): ${errorBody || 'Unknown error'}`
+      );
+      err.statusCode = res.status;
+      throw err;
+    }
+
+    const data = await res.json();
+    return data.response ? data.response.trim() : 'No response generated.';
+  } catch (error) {
+    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      const err = new Error('Follow-up request timed out. Please try asking again.');
+      err.statusCode = 504;
+      throw err;
+    }
+
+    if (error.cause?.code === 'ECONNREFUSED' || error.message.includes('fetch failed')) {
+      const err = new Error(
+        `Cannot connect to Ollama daemon at ${baseUrl}. Ensure Ollama is running.`
+      );
+      err.statusCode = 503;
+      throw err;
+    }
+
+    throw error;
+  }
+};
+

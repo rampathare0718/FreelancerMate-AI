@@ -61,7 +61,18 @@ const projectSchema = new mongoose.Schema(
       },
       proposal: {
         type: String
-      }
+      },
+      flowchart: {
+        type: String // Mermaid diagram syntax or string representation
+      },
+      flowchartSteps: [
+        {
+          step: { type: String },
+          actor: { type: String },
+          action: { type: String },
+          outcome: { type: String }
+        }
+      ]
     }
   },
   {
