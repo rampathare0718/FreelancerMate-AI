@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import projectRoutes from './routes/projectRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -37,6 +38,7 @@ app.get('/api/health', (req, res) => {
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/projects', projectRoutes);
 
 // 404 Not Found Handler
 app.use((req, res) => {

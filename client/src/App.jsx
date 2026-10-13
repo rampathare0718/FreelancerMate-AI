@@ -5,14 +5,16 @@ import FeaturesPage from './components/FeaturesPage';
 import HowItWorksPage from './components/HowItWorksPage';
 import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
-import AiBotScoper from './components/AiBotScoper';
+import Dashboard from './components/Dashboard';
+import AiChatbotWorkspace from './components/AiChatbotWorkspace';
 import AuthRequiredModal from './components/AuthRequiredModal';
 import SamplePreviewModal from './components/SamplePreviewModal';
 import './App.css';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('home'); // 'home' | 'features' | 'how-it-works' | 'login' | 'signup' | 'analyzer'
+  const [currentView, setCurrentView] = useState('home'); // 'home' | 'features' | 'how-it-works' | 'login' | 'signup' | 'dashboard' | 'chatbot'
   const [currentUser, setCurrentUser] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSampleModalOpen, setIsSampleModalOpen] = useState(false);
 
@@ -24,6 +26,8 @@ export default function App() {
         const parsed = JSON.parse(stored);
         if (parsed && parsed.email) {
           setCurrentUser(parsed);
+          // If already logged in, show dashboard by default
+          setCurrentView('dashboard');
         }
       }
     } catch (e) {
@@ -31,23 +35,24 @@ export default function App() {
     }
   }, []);
 
-  // Handle Login success
+  // Handle Login success -> Directly direct user to Dashboard
   const handleLoginSuccess = (userData) => {
     setCurrentUser(userData);
     localStorage.setItem('freelancermate_user', JSON.stringify(userData));
-    setCurrentView('analyzer');
+    setCurrentView('dashboard');
   };
 
-  // Handle Signup success
+  // Handle Signup success -> Directly direct user to Dashboard
   const handleSignupSuccess = (userData) => {
     setCurrentUser(userData);
     localStorage.setItem('freelancermate_user', JSON.stringify(userData));
-    setCurrentView('analyzer');
+    setCurrentView('dashboard');
   };
 
   // Handle Logout
   const handleLogout = () => {
     setCurrentUser(null);
+    setSelectedProject(null);
     localStorage.removeItem('freelancermate_user');
     setCurrentView('home');
   };
@@ -55,34 +60,44 @@ export default function App() {
   // Handle Start Analyzing click
   const handleStartAnalyzing = () => {
     if (currentUser) {
-      setCurrentView('analyzer');
+      setSelectedProject(null);
+      setCurrentView('chatbot');
     } else {
       setIsAuthModalOpen(true);
     }
   };
 
-  // Handle See Sample click
-  const handleSeeSample = () => {
-    setIsSampleModalOpen(true);
+  // Handle Open New Project in Chatbot
+  const handleOpenNewProject = () => {
+    setSelectedProject(null);
+    setCurrentView('chatbot');
+  };
+
+  // Handle Select Project from Dashboard Table
+  const handleSelectProject = (project) => {
+    setSelectedProject(project);
+    setCurrentView('chatbot');
   };
 
   return (
     <div className="fm-app-root">
-      {/* Universal Top Navigation Header */}
-      <Navbar
-        currentView={currentView}
-        setCurrentView={setCurrentView}
-        currentUser={currentUser}
-        onLogout={handleLogout}
-        onOpenAuthModal={() => setIsAuthModalOpen(true)}
-      />
+      {/* Show Top Header Navbar on public marketing & auth views */}
+      {currentView !== 'dashboard' && currentView !== 'chatbot' && (
+        <Navbar
+          currentView={currentView}
+          setCurrentView={setCurrentView}
+          currentUser={currentUser}
+          onLogout={handleLogout}
+          onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        />
+      )}
 
       {/* Main View Display */}
       <main className="fm-main-content">
         {currentView === 'home' && (
           <HomePage
             onStartAnalyzing={handleStartAnalyzing}
-            onSeeSample={handleSeeSample}
+            onSeeSample={() => setIsSampleModalOpen(true)}
             setCurrentView={setCurrentView}
           />
         )}
@@ -117,55 +132,69 @@ export default function App() {
           />
         )}
 
-        {currentView === 'analyzer' && (
-          <div className="fm-analyzer-view-container">
-            <div className="fm-analyzer-subhead">
-              <div className="fm-container">
-                <div className="fm-analyzer-banner">
-                  <span className="fm-analyzer-welcome">
-                    👋 Welcome back, <strong>{currentUser ? currentUser.name : 'Freelancer'}</strong>! Your AI workspace is ready.
-                  </span>
-                  <button
-                    type="button"
-                    className="fm-btn-text"
-                    onClick={() => setCurrentView('home')}
-                  >
-                    ← Back to Home
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="fm-container">
-              <AiBotScoper currentUser={currentUser} />
-            </div>
-          </div>
+        {/* User Dashboard View (Matching user's screenshot with projects table & stats) */}
+        {currentView === 'dashboard' && (
+          <Dashboard
+            currentUser={currentUser}
+            onNewProject={handleOpenNewProject}
+            onSelectProject={handleSelectProject}
+            onGoToHome={() => setCurrentView('home')}
+            onLogout={handleLogout}
+          />
+        )}
+
+        {/* Dedicated Chatbot Workspace (Redesigned: Clean chat in center, separate deliverables canvas) */}
+        {currentView === 'chatbot' && (
+          <AiChatbotWorkspace
+            currentUser={currentUser}
+            selectedProject={selectedProject}
+            onBackToDashboard={() => setCurrentView('dashboard')}
+          />
         )}
       </main>
 
-      {/* Universal Footer */}
-      <footer className="fm-footer">
-        <div className="fm-footer-container">
-          <div className="fm-footer-brand">
-            <span className="fm-footer-logo">FreelanceMate AI</span>
-            <p>AI-powered project scoping, roadmap creation, and client proposals for modern freelance developers.</p>
+      {/* Public Footer (only on landing & info views) */}
+      {currentView !== 'dashboard' && currentView !== 'chatbot' && (
+        <footer className="fm-footer">
+          <div className="fm-footer-container">
+            <div className="fm-footer-brand">
+              <span className="fm-footer-logo">FreelanceMate AI</span>
+              <p>
+                AI-powered project scoping, roadmap creation, and client proposals
+                for modern freelance developers.
+              </p>
+            </div>
+            <div className="fm-footer-links">
+              <button type="button" onClick={() => setCurrentView('features')}>
+                Features
+              </button>
+              <button type="button" onClick={() => setCurrentView('how-it-works')}>
+                How it works
+              </button>
+              {currentUser ? (
+                <button type="button" onClick={() => setCurrentView('dashboard')}>
+                  Dashboard
+                </button>
+              ) : (
+                <>
+                  <button type="button" onClick={() => setCurrentView('login')}>
+                    Log in
+                  </button>
+                  <button type="button" onClick={() => setCurrentView('signup')}>
+                    Sign up free
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-          <div className="fm-footer-links">
-            <button type="button" onClick={() => setCurrentView('features')}>Features</button>
-            <button type="button" onClick={() => setCurrentView('how-it-works')}>How it works</button>
-            {currentUser ? (
-              <button type="button" onClick={() => setCurrentView('analyzer')}>AI Scoper</button>
-            ) : (
-              <>
-                <button type="button" onClick={() => setCurrentView('login')}>Log in</button>
-                <button type="button" onClick={() => setCurrentView('signup')}>Sign up free</button>
-              </>
-            )}
+          <div className="fm-footer-bottom">
+            <p>
+              &copy; {new Date().getFullYear()} FreelanceMate AI. Powered by Google
+              Gemma & MERN Stack.
+            </p>
           </div>
-        </div>
-        <div className="fm-footer-bottom">
-          <p>&copy; {new Date().getFullYear()} FreelanceMate AI. Powered by Google Gemma & MERN Stack.</p>
-        </div>
-      </footer>
+        </footer>
+      )}
 
       {/* Modal: Account Required Prompt */}
       <AuthRequiredModal
