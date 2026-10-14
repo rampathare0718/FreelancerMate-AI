@@ -59,7 +59,19 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 FreelancerMate AI Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
   console.log(`📡 Base URL: http://localhost:${PORT}`);
 });
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`⚠️ Port ${PORT} is already in use by another running process.`);
+    console.error(`👉 Free the port or run: npx kill-port ${PORT}`);
+    process.exit(1);
+  } else {
+    console.error('Server error:', err);
+    process.exit(1);
+  }
+});
+

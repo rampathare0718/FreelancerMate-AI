@@ -16,8 +16,13 @@ import {
   X,
   Send,
   RefreshCw,
-  Plus
+  Plus,
+  Eye,
+  Download
 } from 'lucide-react';
+import ProposalsView from './ProposalsView';
+import ClientProposalModal from './ClientProposalModal';
+import SettingsView from './SettingsView';
 
 const FORMAT_TEMPLATE = `Description: [Client requirements & core features]
 Budget: [e.g. ₹60,000 INR (Optional)]
@@ -64,7 +69,8 @@ export default function Dashboard({
   onNewProject,
   onSelectProject,
   onGoToHome,
-  onLogout
+  onLogout,
+  onUpdateUser
 }) {
   const [activeSidebarItem, setActiveSidebarItem] = useState('dashboard');
   const [projects, setProjects] = useState([]);
@@ -82,6 +88,15 @@ export default function Dashboard({
   const [newProjectPrompt, setNewProjectPrompt] = useState('');
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [modalError, setModalError] = useState(null);
+
+  // Client Proposal Document Modal State
+  const [selectedProposalProject, setSelectedProposalProject] = useState(null);
+  const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
+
+  const handleOpenProposalModal = (proj) => {
+    setSelectedProposalProject(proj);
+    setIsProposalModalOpen(true);
+  };
 
   // Fetch projects from backend
   useEffect(() => {
@@ -218,7 +233,7 @@ export default function Dashboard({
     setNewProjectPrompt(FORMAT_TEMPLATE);
   };
 
-  const handleCreateAndAnalyzeProject = async (e) => {
+  const handleCreateProject = (e) => {
     e.preventDefault();
     setModalError(null);
 
@@ -232,133 +247,30 @@ export default function Dashboard({
       return;
     }
 
-    if (!newProjectPrompt.trim() || newProjectPrompt.trim().length < 10) {
-      setModalError('Please provide project requirements (at least 10 characters).');
-      return;
+    const initialProject = {
+      _id: `proj-${Date.now()}`,
+      title: newProjectTitle.trim(),
+      clientName: newClientName.trim(),
+      status: 'draft',
+      timeEstimate: 'Awaiting prompt',
+      pricingEstimate: 'To be estimated',
+      createdAt: new Date().toISOString()
+    };
+
+    // Prepend to dashboard projects list
+    setProjects((prev) => [initialProject, ...prev]);
+    setStats((prev) => ({
+      ...prev,
+      totalProjects: prev.totalProjects + 1
+    }));
+
+    if (onProjectCreated) {
+      onProjectCreated(initialProject);
     }
 
-    setIsCreatingProject(true);
-    try {
-      // Call AI analysis with Client Name, Title, and Prompt
-      const res = await axios
-        .post('/api/ai/analyze', {
-          title: newProjectTitle.trim(),
-          clientName: newClientName.trim(),
-          prompt: newProjectPrompt.trim(),
-          userId: currentUser?._id,
-          saveToDb: true
-        })
-        .catch(() =>
-          axios.post('http://localhost:5000/api/ai/analyze', {
-            title: newProjectTitle.trim(),
-            clientName: newClientName.trim(),
-            prompt: newProjectPrompt.trim(),
-            userId: currentUser?._id,
-            saveToDb: true
-          })
-        );
-
-      let createdProject = null;
-
-      if (res.data?.success && res.data.data) {
-        const { title, clientName, analysis, project } = res.data.data;
-        createdProject = {
-          _id: project?._id || `proj-${Date.now()}`,
-          title: title || newProjectTitle.trim(),
-          clientName: clientName || newClientName.trim(),
-          status: 'analyzed',
-          timeEstimate: analysis?.timeEstimate || '3-4 wks',
-          pricingEstimate: analysis?.pricingEstimate || '₹55,000 INR',
-          analysis: analysis,
-          clientRequest: newProjectPrompt.trim()
-        };
-      } else {
-        // Fallback demo project record
-        createdProject = {
-          _id: `proj-${Date.now()}`,
-          title: newProjectTitle.trim(),
-          clientName: newClientName.trim(),
-          status: 'analyzed',
-          timeEstimate: '3-4 wks',
-          pricingEstimate: '₹50,000 INR',
-          clientRequest: newProjectPrompt.trim(),
-          analysis: {
-            title: newProjectTitle.trim(),
-            summary: `A complete full-stack web system developed for ${newClientName.trim()} with end-to-end functionality, responsive interface, and secure database architecture.`,
-            requirements: [
-              'Responsive mobile-first user experience',
-              'Core domain workflow execution with transaction safety',
-              'Admin dashboard with analytics and management controls',
-              'Secure authentication and database persistence'
-            ],
-            techStack: {
-              frontend: 'React 19 + TailwindCSS',
-              backend: 'Node.js + Express.js REST API',
-              database: 'MongoDB Atlas',
-              auth: 'JWT & Bcrypt',
-              payment: 'Razorpay UPI & Cards'
-            },
-            timeEstimate: '3-4 wks',
-            pricingEstimate: '₹50,000 - ₹65,000 INR',
-            flowchart: `graph TD\n  A[${newClientName.trim()} User] --> B[Browse System]\n  B --> C[Execute Core Action]\n  C --> D[Process Transaction]\n  D --> E[Stored in MongoDB]`,
-            flowchartSteps: [
-              { step: '1', actor: 'Client User', action: 'Initiates request', outcome: 'Action registered' },
-              { step: '2', actor: 'Express API', action: 'Processes business logic', outcome: 'Validated payload' },
-              { step: '3', actor: 'MongoDB', action: 'Persists records', outcome: 'Record updated' }
-            ],
-            proposal: `Subject: Development Proposal: ${newProjectTitle.trim()}\n\nDear ${newClientName.trim()},\n\nWe are delighted to submit our comprehensive project plan for ${newProjectTitle.trim()} with an estimated delivery timeline of 3-4 weeks.\n\nBest regards,\nFreelanceMate AI Partner`
-          }
-        };
-      }
-
-      // Prepend to dashboard projects list
-      setProjects((prev) => [createdProject, ...prev]);
-      setStats((prev) => ({
-        ...prev,
-        totalProjects: prev.totalProjects + 1
-      }));
-
-      if (onProjectCreated) {
-        onProjectCreated(createdProject);
-      }
-
-      setIsModalOpen(false);
-      // Immediately open the newly created project in the workspace!
-      onSelectProject(createdProject);
-    } catch (err) {
-      console.warn('Analysis error:', err);
-      // Fallback: create and open project
-      const fallbackProject = {
-        _id: `proj-${Date.now()}`,
-        title: newProjectTitle.trim(),
-        clientName: newClientName.trim(),
-        status: 'analyzed',
-        timeEstimate: '3-4 wks',
-        pricingEstimate: '₹50,000 INR',
-        clientRequest: newProjectPrompt.trim(),
-        analysis: {
-          title: newProjectTitle.trim(),
-          summary: `Project scoped for ${newClientName.trim()}.`,
-          requirements: ['Core deliverables scoped and ready for kickoff.'],
-          techStack: { frontend: 'React', backend: 'Node/Express', database: 'MongoDB' },
-          timeEstimate: '3-4 wks',
-          pricingEstimate: '₹50,000 INR',
-          flowchart: 'graph TD\n  A[Client Request] --> B[Processing] --> C[MongoDB]',
-          flowchartSteps: [{ step: '1', actor: newClientName.trim(), action: 'Submits order', outcome: 'Processed' }]
-        }
-      };
-      setProjects((prev) => [fallbackProject, ...prev]);
-      setStats((prev) => ({ ...prev, totalProjects: prev.totalProjects + 1 }));
-
-      if (onProjectCreated) {
-        onProjectCreated(fallbackProject);
-      }
-
-      setIsModalOpen(false);
-      onSelectProject(fallbackProject);
-    } finally {
-      setIsCreatingProject(false);
-    }
+    setIsModalOpen(false);
+    // Redirect directly to the chatbot workspace with this project
+    onSelectProject(initialProject);
   };
 
   return (
@@ -464,83 +376,195 @@ export default function Dashboard({
 
       {/* Main Content Area (Matching Screenshot) */}
       <main className="fm-dashboard-main">
-        {/* Top Header Row */}
-        <header className="fm-dash-header">
-          <div>
-            <h1 className="fm-dash-title">Your projects</h1>
-            <p className="fm-dash-subtitle">Previous analyses and proposals</p>
-          </div>
+        {/* VIEW 1: PROPOSALS TAB */}
+        {activeSidebarItem === 'proposals' && (
+          <ProposalsView
+            projects={projects}
+            onOpenProposalModal={handleOpenProposalModal}
+            onOpenInChatbot={onSelectProject}
+            onOpenNewProjectModal={handleOpenNewProjectModal}
+          />
+        )}
 
-          <button
-            type="button"
-            className="fm-btn-primary fm-btn-new-project"
-            onClick={handleOpenNewProjectModal}
-          >
-            <span>+ New project</span>
-          </button>
-        </header>
+        {/* VIEW 2: DASHBOARD OVERVIEW */}
+        {activeSidebarItem === 'dashboard' && (
+          <>
+            {/* Top Header Row */}
+            <header className="fm-dash-header">
+              <div>
+                <h1 className="fm-dash-title">Your projects</h1>
+                <p className="fm-dash-subtitle">Previous analyses and proposals</p>
+              </div>
 
-        {/* 3 Metric Stat Cards */}
-        <section className="fm-stats-grid">
-          <div className="fm-stat-card">
-            <span className="fm-stat-label">Projects</span>
-            <div className="fm-stat-num">{stats.totalProjects}</div>
-          </div>
+              <button
+                type="button"
+                className="fm-btn-primary fm-btn-new-project"
+                onClick={handleOpenNewProjectModal}
+              >
+                <span>+ New project</span>
+              </button>
+            </header>
 
-          <div className="fm-stat-card">
-            <span className="fm-stat-label">Proposals sent</span>
-            <div className="fm-stat-num">{stats.proposalsSent}</div>
-          </div>
+            {/* 3 Metric Stat Cards */}
+            <section className="fm-stats-grid">
+              <div className="fm-stat-card">
+                <span className="fm-stat-label">Projects</span>
+                <div className="fm-stat-num">{stats.totalProjects}</div>
+              </div>
 
-          <div className="fm-stat-card">
-            <span className="fm-stat-label">Awaiting reply</span>
-            <div className="fm-stat-num">{stats.awaitingReply}</div>
-          </div>
-        </section>
+              <div
+                className="fm-stat-card clickable"
+                onClick={() => setActiveSidebarItem('proposals')}
+                title="Click to view all Client Proposals"
+                style={{ cursor: 'pointer' }}
+              >
+                <span className="fm-stat-label">Proposals sent</span>
+                <div className="fm-stat-num">{stats.proposalsSent}</div>
+              </div>
 
-        {/* Projects Table Card */}
-        <section className="fm-table-card">
-          <table className="fm-projects-table">
-            <thead>
-              <tr>
-                <th>Project</th>
-                <th>Client</th>
-                <th>Status</th>
-                <th>Estimate</th>
-              </tr>
-            </thead>
-            <tbody>
-              {projects.map((proj, idx) => (
-                <tr
-                  key={proj._id || idx}
-                  className="fm-table-row"
-                  onClick={() => onSelectProject(proj)}
-                  title="Click to open project plan, flowchart & chatbot"
-                >
-                  <td className="fm-td-title">
-                    <strong>{proj.title}</strong>
-                  </td>
-                  <td className="fm-td-client">
-                    {proj.clientName || 'Direct Client'}
-                  </td>
-                  <td className="fm-td-status">
-                    {getStatusBadge(proj.status)}
-                  </td>
-                  <td className="fm-td-estimate">
-                    {proj.timeEstimate || '3-4 wks'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+              <div className="fm-stat-card">
+                <span className="fm-stat-label">Awaiting reply</span>
+                <div className="fm-stat-num">{stats.awaitingReply}</div>
+              </div>
+            </section>
+
+            {/* Projects Table Card */}
+            <section className="fm-table-card">
+              <table className="fm-projects-table">
+                <thead>
+                  <tr>
+                    <th>Project</th>
+                    <th>Client</th>
+                    <th>Status</th>
+                    <th>Estimate</th>
+                    <th>Proposal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projects.map((proj, idx) => (
+                    <tr
+                      key={proj._id || idx}
+                      className="fm-table-row"
+                    >
+                      <td className="fm-td-title" onClick={() => onSelectProject(proj)} style={{ cursor: 'pointer' }}>
+                        <strong>{proj.title}</strong>
+                      </td>
+                      <td className="fm-td-client" onClick={() => onSelectProject(proj)} style={{ cursor: 'pointer' }}>
+                        {proj.clientName || 'Direct Client'}
+                      </td>
+                      <td className="fm-td-status" onClick={() => onSelectProject(proj)} style={{ cursor: 'pointer' }}>
+                        {getStatusBadge(proj.status)}
+                      </td>
+                      <td className="fm-td-estimate" onClick={() => onSelectProject(proj)} style={{ cursor: 'pointer' }}>
+                        {proj.timeEstimate || '3-4 wks'}
+                      </td>
+                      <td className="fm-td-proposal-action" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="fm-btn-table-proposal"
+                          onClick={() => handleOpenProposalModal(proj)}
+                          title="View 2-page detailed proposal & export to PDF"
+                        >
+                          <FileText size={14} />
+                          <span>View Proposal & PDF</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          </>
+        )}
+
+        {/* VIEW 3: PROJECTS TAB */}
+        {activeSidebarItem === 'projects' && (
+          <>
+            <header className="fm-dash-header">
+              <div>
+                <h1 className="fm-dash-title">All Projects</h1>
+                <p className="fm-dash-subtitle">Complete list of ongoing, analyzed, and draft projects</p>
+              </div>
+
+              <button
+                type="button"
+                className="fm-btn-primary fm-btn-new-project"
+                onClick={handleOpenNewProjectModal}
+              >
+                <span>+ New project</span>
+              </button>
+            </header>
+
+            <section className="fm-table-card">
+              <table className="fm-projects-table">
+                <thead>
+                  <tr>
+                    <th>Project</th>
+                    <th>Client</th>
+                    <th>Status</th>
+                    <th>Estimate</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projects.map((proj, idx) => (
+                    <tr key={proj._id || idx} className="fm-table-row">
+                      <td className="fm-td-title" onClick={() => onSelectProject(proj)} style={{ cursor: 'pointer' }}>
+                        <strong>{proj.title}</strong>
+                      </td>
+                      <td className="fm-td-client" onClick={() => onSelectProject(proj)} style={{ cursor: 'pointer' }}>
+                        {proj.clientName || 'Direct Client'}
+                      </td>
+                      <td className="fm-td-status" onClick={() => onSelectProject(proj)} style={{ cursor: 'pointer' }}>
+                        {getStatusBadge(proj.status)}
+                      </td>
+                      <td className="fm-td-estimate">
+                        {proj.timeEstimate || '3-4 wks'}
+                      </td>
+                      <td className="fm-td-proposal-action" onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: 'flex', gap: '0.45rem' }}>
+                          <button
+                            type="button"
+                            className="fm-btn-table-proposal"
+                            onClick={() => handleOpenProposalModal(proj)}
+                            title="View 2-page detailed proposal & export to PDF"
+                          >
+                            <FileText size={14} />
+                            <span>Proposal</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="fm-btn-table-proposal secondary"
+                            onClick={() => onSelectProject(proj)}
+                            title="Open in AI Chatbot"
+                          >
+                            <span>Chat</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          </>
+        )}
+
+        {/* VIEW 4: SETTINGS & PROFILE EDITING */}
+        {activeSidebarItem === 'settings' && (
+          <SettingsView
+            currentUser={currentUser}
+            onUpdateUser={onUpdateUser}
+            onLogout={onLogout}
+          />
+        )}
       </main>
 
       {/* ============================================================
-          NEW PROJECT MODAL: Enter Owner Name, Title, and Prompt
+          NEW PROJECT MODAL: Enter Client / Owner Name & Project Title
          ============================================================ */}
       {isModalOpen && (
-        <div className="fm-modal-backdrop" onClick={() => !isCreatingProject && setIsModalOpen(false)}>
+        <div className="fm-modal-backdrop" onClick={() => setIsModalOpen(false)}>
           <div
             className="fm-modal-card fm-new-project-modal"
             onClick={(e) => e.stopPropagation()}
@@ -551,7 +575,6 @@ export default function Dashboard({
               type="button"
               className="fm-modal-close-btn"
               onClick={() => setIsModalOpen(false)}
-              disabled={isCreatingProject}
             >
               <X size={20} />
             </button>
@@ -560,9 +583,9 @@ export default function Dashboard({
               <div className="fm-modal-icon-badge" style={{ margin: '0 0 0.75rem 0' }}>
                 <PlusCircle size={22} color="#4338ca" />
               </div>
-              <h2 className="fm-modal-title">Create New Project</h2>
+              <h2 className="fm-modal-title">New Project</h2>
               <p className="fm-modal-subtitle">
-                Enter the client details, project title, and requirements prompt to analyze with AI and update your dashboard.
+                Enter your client name and project title. You will then be taken directly to the AI Chatbot to provide requirements and scope the full plan.
               </p>
             </div>
 
@@ -572,25 +595,7 @@ export default function Dashboard({
               </div>
             )}
 
-            {/* Quick 1-Click Samples */}
-            <div className="fm-modal-sample-bar">
-              <span className="fm-sample-bar-label">Try sample briefs:</span>
-              <div className="fm-sample-bar-btns">
-                {QUICK_SAMPLES.map((s, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    className="fm-sample-bar-chip"
-                    onClick={() => handleApplySample(s)}
-                    disabled={isCreatingProject}
-                  >
-                    {s.title}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <form onSubmit={handleCreateAndAnalyzeProject} className="fm-new-project-form">
+            <form onSubmit={handleCreateProject} className="fm-new-project-form">
               {/* Field 1: Owner / Client Name */}
               <div className="fm-form-field">
                 <label className="fm-form-label" htmlFor="modal-client-name">
@@ -603,7 +608,7 @@ export default function Dashboard({
                   placeholder="e.g. Sweet Crumbs Bakery, FitHub, Dr. Mehta"
                   value={newClientName}
                   onChange={(e) => setNewClientName(e.target.value)}
-                  disabled={isCreatingProject}
+                  autoFocus
                   required
                 />
               </div>
@@ -620,46 +625,16 @@ export default function Dashboard({
                   placeholder="e.g. Bakery Ordering Website, Gym Booking App"
                   value={newProjectTitle}
                   onChange={(e) => setNewProjectTitle(e.target.value)}
-                  disabled={isCreatingProject}
-                  required
-                />
-              </div>
-
-              {/* Field 3: Requirements Prompt */}
-              <div className="fm-form-field">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label className="fm-form-label" htmlFor="modal-project-prompt">
-                    Requirements / Client Message *
-                  </label>
-                  <button
-                    type="button"
-                    className="btn-insert-template"
-                    onClick={handleInsertTemplate}
-                    disabled={isCreatingProject}
-                  >
-                    <Plus size={12} />
-                    <span>+ Template</span>
-                  </button>
-                </div>
-                <textarea
-                  id="modal-project-prompt"
-                  className="fm-modal-textarea"
-                  rows={5}
-                  placeholder="Paste what the client sent or type project features, timeline, and tech preferences..."
-                  value={newProjectPrompt}
-                  onChange={(e) => setNewProjectPrompt(e.target.value)}
-                  disabled={isCreatingProject}
                   required
                 />
               </div>
 
               {/* Actions */}
-              <div className="fm-modal-form-actions">
+              <div className="fm-modal-form-actions" style={{ marginTop: '1.5rem' }}>
                 <button
                   type="button"
                   className="fm-btn-secondary"
                   onClick={() => setIsModalOpen(false)}
-                  disabled={isCreatingProject}
                 >
                   Cancel
                 </button>
@@ -667,25 +642,24 @@ export default function Dashboard({
                 <button
                   type="submit"
                   className="fm-btn-primary fm-btn-modal-submit"
-                  disabled={isCreatingProject || !newClientName.trim() || !newProjectTitle.trim()}
+                  disabled={!newClientName.trim() || !newProjectTitle.trim()}
                 >
-                  {isCreatingProject ? (
-                    <>
-                      <RefreshCw size={16} className="animate-spin" />
-                      <span>Analyzing & Adding to Dashboard...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles size={16} />
-                      <span>Analyze & Add to Dashboard</span>
-                    </>
-                  )}
+                  <Sparkles size={16} />
+                  <span>Continue to AI Chatbot →</span>
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* 2-Page Client Proposal Modal with PDF Export */}
+      <ClientProposalModal
+        project={selectedProposalProject}
+        isOpen={isProposalModalOpen}
+        onClose={() => setIsProposalModalOpen(false)}
+        onOpenInChatbot={onSelectProject}
+      />
     </div>
   );
 }

@@ -134,6 +134,14 @@ export const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         age: user.age,
+        title: user.title,
+        phone: user.phone,
+        bio: user.bio,
+        location: user.location,
+        hourlyRate: user.hourlyRate,
+        currency: user.currency,
+        warrantyDays: user.warrantyDays,
+        proposalSignoff: user.proposalSignoff,
         createdAt: user.createdAt
       }
     });
@@ -144,4 +152,76 @@ export const loginUser = async (req, res) => {
     });
   }
 };
+
+// @desc    Update user profile
+// @route   PUT /api/users/:id
+// @access  Public
+export const updateUserProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      name,
+      email,
+      title,
+      phone,
+      bio,
+      location,
+      hourlyRate,
+      currency,
+      warrantyDays,
+      proposalSignoff,
+      proposalTone
+    } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (name) user.name = name.trim();
+    if (email) user.email = email.toLowerCase().trim();
+    if (title !== undefined) user.title = title.trim();
+    if (phone !== undefined) user.phone = phone.trim();
+    if (bio !== undefined) user.bio = bio.trim();
+    if (location !== undefined) user.location = location.trim();
+    if (hourlyRate !== undefined) user.hourlyRate = hourlyRate;
+    if (currency !== undefined) user.currency = currency;
+    if (warrantyDays !== undefined) user.warrantyDays = Number(warrantyDays);
+    if (proposalSignoff !== undefined) user.proposalSignoff = proposalSignoff.trim();
+    if (proposalTone !== undefined) user.proposalTone = proposalTone;
+
+    const updated = await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: {
+        _id: updated._id,
+        name: updated.name,
+        email: updated.email,
+        age: updated.age,
+        title: updated.title,
+        phone: updated.phone,
+        bio: updated.bio,
+        location: updated.location,
+        hourlyRate: updated.hourlyRate,
+        currency: updated.currency,
+        warrantyDays: updated.warrantyDays,
+        proposalSignoff: updated.proposalSignoff,
+        proposalTone: updated.proposalTone,
+        createdAt: updated.createdAt,
+        updatedAt: updated.updatedAt
+      }
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 

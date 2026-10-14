@@ -55,6 +55,12 @@ export default function App() {
     setCurrentView('dashboard');
   };
 
+  // Handle User profile update
+  const handleUpdateUser = (updatedUser) => {
+    setCurrentUser(updatedUser);
+    localStorage.setItem('freelancermate_user', JSON.stringify(updatedUser));
+  };
+
   // Handle Logout
   const handleLogout = () => {
     setCurrentUser(null);
@@ -148,6 +154,7 @@ export default function App() {
             onSelectProject={handleSelectProject}
             onGoToHome={() => setCurrentView('home')}
             onLogout={handleLogout}
+            onUpdateUser={handleUpdateUser}
           />
         )}
 

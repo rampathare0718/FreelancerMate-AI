@@ -4,6 +4,7 @@ import {
   Send,
   Sparkles,
   Bot,
+  User,
   User as UserIcon,
   MessageSquare,
   FileText,
@@ -23,9 +24,12 @@ import {
   ExternalLink,
   Plus,
   HelpCircle,
-  LayoutDashboard
+  LayoutDashboard,
+  FolderGit2,
+  Download
 } from 'lucide-react';
 import FlowchartViewer from './FlowchartViewer';
+import ClientProposalModal from './ClientProposalModal';
 
 const FORMAT_TEMPLATE = `Title: [Project Title]
 Description: [Client requirements & core features]
@@ -89,13 +93,14 @@ export default function AiChatbotWorkspace({
   const [deliverablesTab, setDeliverablesTab] = useState('summary');
   const [copiedProposal, setCopiedProposal] = useState(false);
   const [copiedSummary, setCopiedSummary] = useState(false);
+  const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   const chatBottomRef = useRef(null);
 
   // Initialize conversation or load selected project
   useEffect(() => {
     if (selectedProject?.analysis) {
-      setClientNameInput(selectedProject.clientName || '');
-      setProjectTitleInput(selectedProject.title || '');
+      setClientNameInput(selectedProject.clientName || 'Direct Client');
+      setProjectTitleInput(selectedProject.title || 'Client Project');
       setAnalysisResult({
         title: selectedProject.title,
         ...selectedProject.analysis
@@ -111,6 +116,20 @@ export default function AiChatbotWorkspace({
           hasDeliverables: true
         }
       ]);
+    } else if (selectedProject?.title) {
+      // Draft project created from dashboard (has clientName and title, ready for requirements prompt!)
+      const client = selectedProject.clientName || 'Direct Client';
+      const title = selectedProject.title;
+      setClientNameInput(client);
+      setProjectTitleInput(title);
+      setAnalysisResult(null);
+      setMessages([
+        {
+          role: 'assistant',
+          text: `👋 Hi ${currentUser?.name ? currentUser.name.split(' ')[0] : 'there'}! I'm ready to scope your new project **${title}** for client **${client}**.\n\nPlease describe what the client needs below (e.g. features, user roles, payment options, budget, or deadline). I will architect the roadmap, build an interactive flowchart, and write a client proposal!`,
+          showTemplateTip: true
+        }
+      ]);
     } else {
       // Clean welcoming initial chat state
       setClientNameInput('');
@@ -119,7 +138,7 @@ export default function AiChatbotWorkspace({
       setMessages([
         {
           role: 'assistant',
-          text: `👋 Hi ${currentUser?.name ? currentUser.name.split(' ')[0] : 'there'}! I'm your **FreelanceMate AI Copilot**.\n\nEnter your **Client/Owner Name**, **Project Title**, and requirements below. I will analyze the scope in this structured format:\n1. 📋 **Summary & Requirements**\n2. ⚙️ **Recommended Tech Stack**\n3. 🔄 **Architecture & Interactive Flowchart**\n4. 📄 **Client Proposal with Pricing in INR**`,
+          text: `👋 Hi ${currentUser?.name ? currentUser.name.split(' ')[0] : 'there'}! I'm your **FreelanceMate AI Copilot**.\n\nPlease describe the project requirements below. I will analyze the scope in this structured format:\n1. 📋 **Summary & Requirements**\n2. ⚙️ **Recommended Tech Stack**\n3. 🔄 **Architecture & Interactive Flowchart**\n4. 📄 **Client Proposal with Pricing in INR**`,
           showTemplateTip: true
         }
       ]);
@@ -226,7 +245,7 @@ export default function AiChatbotWorkspace({
         setAnalysisResult(analysis);
 
         const createdProj = {
-          _id: res.data.data.project?._id || `proj-${Date.now()}`,
+          _id: selectedProject?._id || res.data.data.project?._id || `proj-${Date.now()}`,
           title: analysis.title,
           clientName: resolvedClient,
           status: 'analyzed',
@@ -322,7 +341,7 @@ FreelancerMate AI Partner`
     setAnalysisResult(demo);
 
     const fallbackProj = {
-      _id: `proj-${Date.now()}`,
+      _id: selectedProject?._id || `proj-${Date.now()}`,
       title: resolvedTitle,
       clientName: resolvedClient,
       status: 'analyzed',
@@ -453,6 +472,50 @@ FreelancerMate AI Partner`
            ============================================================ */}
         {activeWorkspaceView === 'chat' && (
           <div className="fm-chat-centered-layout">
+            {/* Dedicated Top Project Identity Card (Distinct and separate from chatbot) */}
+            <div className="fm-project-context-card">
+              <div className="fm-pcard-left">
+                <div className="fm-pcard-icon">
+                  <FolderGit2 size={24} color="#4338ca" />
+                </div>
+                <div className="fm-pcard-details">
+                  <div className="fm-pcard-meta-line">
+                    <span className="fm-pcard-badge client">
+                      <User size={12} />
+                      <span>Client: <strong>{clientNameInput || selectedProject?.clientName || 'Direct Client'}</strong></span>
+                    </span>
+                    <span className={`fm-pcard-badge status ${analysisResult ? 'analyzed' : 'draft'}`}>
+                      {analysisResult ? '● Scope Analyzed' : '● Scoping in Progress'}
+                    </span>
+                    {analysisResult && (
+                      <span className="fm-pcard-badge estimate">
+                        <Clock size={12} />
+                        <span>{analysisResult.timeEstimate || '3-4 Weeks'}</span>
+                      </span>
+                    )}
+                  </div>
+                  <h1 className="fm-pcard-title">
+                    {projectTitleInput || selectedProject?.title || 'New Project'}
+                  </h1>
+                </div>
+              </div>
+
+              {analysisResult && (
+                <button
+                  type="button"
+                  className="fm-btn-primary fm-pcard-btn-view"
+                  onClick={() => {
+                    setDeliverablesTab('summary');
+                    setActiveWorkspaceView('deliverables');
+                  }}
+                >
+                  <FileText size={15} />
+                  <span>View Project Plan</span>
+                  <ChevronRight size={15} />
+                </button>
+              )}
+            </div>
+
             {/* Chat Messages Stream */}
             <div className="fm-chat-stream">
               {messages.map((msg, idx) => (
@@ -540,7 +603,7 @@ FreelancerMate AI Partner`
                       <span>
                         {analysisResult
                           ? 'Consulting AI on your follow-up...'
-                          : 'Analyzing client brief, estimating pricing & architecting flowchart...'}
+                          : `Analyzing requirements for ${projectTitleInput || 'project'}...`}
                       </span>
                     </div>
                   </div>
@@ -572,42 +635,14 @@ FreelancerMate AI Partner`
 
             {/* Bottom Input Prompt Bar */}
             <form onSubmit={handleSendMessage} className="fm-chat-input-bar">
-              {/* If analyzing a new project, enter Owner Name and Title first */}
-              {!analysisResult && (
-                <div className="fm-chat-pre-inputs-row">
-                  <div className="fm-chat-pre-input-wrap">
-                    <label className="fm-chat-pre-label">Owner / Client Name *</label>
-                    <input
-                      type="text"
-                      className="fm-chat-meta-input"
-                      placeholder="e.g. Sweet Crumbs Bakery, FitHub"
-                      value={clientNameInput}
-                      onChange={(e) => setClientNameInput(e.target.value)}
-                      disabled={isAiThinking}
-                    />
-                  </div>
-                  <div className="fm-chat-pre-input-wrap">
-                    <label className="fm-chat-pre-label">Project Title *</label>
-                    <input
-                      type="text"
-                      className="fm-chat-meta-input"
-                      placeholder="e.g. Bakery ordering website"
-                      value={projectTitleInput}
-                      onChange={(e) => setProjectTitleInput(e.target.value)}
-                      disabled={isAiThinking}
-                    />
-                  </div>
-                </div>
-              )}
-
               <div className="fm-input-container">
                 <textarea
                   className="fm-chat-textarea"
                   rows={analysisResult ? 2 : 4}
                   placeholder={
                     analysisResult
-                      ? 'Ask a follow-up question (e.g. Can we reduce timeline to 2 weeks?)...'
-                      : 'Paste client message or prompt here (features, budget, deadline, tech preferences)...'
+                      ? `Ask a follow-up about ${projectTitleInput || 'this project'} (e.g. Can we reduce timeline to 2 weeks?)...`
+                      : `Enter or paste client requirements for "${projectTitleInput || 'this project'}" (features, budget, deadline, tech preferences)...`
                   }
                   value={promptInput}
                   onChange={(e) => setPromptInput(e.target.value)}
@@ -999,23 +1034,44 @@ FreelancerMate AI Partner`
               )}
 
               {/* ============================================================
-                  TAB 4: CLIENT PROPOSAL (Ready to send with 1-click copy)
+                  TAB 4: CLIENT PROPOSAL (Ready to send with 1-click copy & 2-page PDF)
                  ============================================================ */}
               {deliverablesTab === 'proposal' && (
                 <div className="fm-deliv-section">
                   <div className="fm-proposal-header-row">
                     <div>
-                      <h3>Ready-to-Send Client Proposal</h3>
-                      <p>Formatted professional pitch ready to copy and send via email, Upwork, or WhatsApp.</p>
+                      <h3>Client Proposal & PDF Document</h3>
+                      <p>2-page executive proposal crafted in plain English for fresher & business clients with 1-click PDF download.</p>
                     </div>
-                    <button
-                      type="button"
-                      className="fm-btn-primary fm-btn-copy-proposal"
-                      onClick={handleCopyProposal}
-                    >
-                      {copiedProposal ? <Check size={16} /> : <Copy size={16} />}
-                      <span>{copiedProposal ? 'Copied to Clipboard!' : 'Copy Proposal'}</span>
-                    </button>
+
+                    <div className="fm-proposal-actions-row">
+                      <button
+                        type="button"
+                        className="fm-btn-primary fm-btn-view-2page"
+                        onClick={() => setIsProposalModalOpen(true)}
+                        title="View formatted 2-page proposal & download PDF"
+                      >
+                        <FileText size={16} />
+                        <span>View 2-Page Proposal & PDF</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="fm-btn-secondary fm-btn-copy-proposal"
+                        onClick={handleCopyProposal}
+                      >
+                        {copiedProposal ? <Check size={16} color="#15803d" /> : <Copy size={16} />}
+                        <span>{copiedProposal ? 'Copied Pitch!' : 'Copy Quick Pitch'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="fm-proposal-banner-alert">
+                    <Sparkles size={18} color="#4338ca" />
+                    <div>
+                      <strong>Full 2-Page Proposal Available:</strong>
+                      <span> Includes Executive Summary, 4-Module Scope, Non-Tech Stack breakdown, 4-Week Roadmap, Milestone Payments in INR, 30-Day Free Warranty, and Acceptance Signatures. Click "View 2-Page Proposal & PDF" above to view or export.</span>
+                    </div>
                   </div>
 
                   <pre className="fm-proposal-pre-canvas">
@@ -1048,6 +1104,21 @@ FreelancerMate AI Partner`
           </div>
         )}
       </div>
+
+      {/* 2-Page Client Proposal Modal with PDF Export */}
+      <ClientProposalModal
+        project={
+          selectedProject || {
+            title: analysisResult?.title || projectTitleInput || 'Client Project',
+            clientName: clientNameInput || 'Direct Client',
+            analysis: analysisResult,
+            timeEstimate: analysisResult?.timeEstimate,
+            pricingEstimate: analysisResult?.pricingEstimate
+          }
+        }
+        isOpen={isProposalModalOpen}
+        onClose={() => setIsProposalModalOpen(false)}
+      />
     </div>
   );
 }

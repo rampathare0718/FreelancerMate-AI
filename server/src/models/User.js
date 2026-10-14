@@ -31,6 +31,46 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Please provide a password'],
       minlength: [6, 'Password must be at least 6 characters long'],
       select: false // Excludes password by default in queries for security
+    },
+    title: {
+      type: String,
+      trim: true,
+      default: 'Full-Stack Web Developer'
+    },
+    phone: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    bio: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    location: {
+      type: String,
+      trim: true,
+      default: 'India'
+    },
+    hourlyRate: {
+      type: String,
+      default: '₹1,500'
+    },
+    currency: {
+      type: String,
+      default: 'INR'
+    },
+    warrantyDays: {
+      type: Number,
+      default: 30
+    },
+    proposalSignoff: {
+      type: String,
+      default: 'Freelance Solutions Architect'
+    },
+    proposalTone: {
+      type: String,
+      default: 'fresher-friendly'
     }
   },
   {
