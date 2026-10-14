@@ -63,7 +63,7 @@ export const getProjects = async (req, res) => {
     const formattedDbProjects = dbProjects.map((p) => ({
       _id: p._id.toString(),
       title: p.title,
-      clientName: p.analysis?.summary ? p.title.split(' ')[0] + ' Client' : 'Direct Client',
+      clientName: p.clientName || 'Direct Client',
       clientRequest: p.clientRequest,
       status: p.status || 'analyzed',
       timeEstimate: p.analysis?.timeEstimate || '3-4 wks',
@@ -128,3 +128,27 @@ export const getProjectById = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Create new project
+// @route   POST /api/projects
+// @access  Public
+export const createProject = async (req, res) => {
+  try {
+    const { title, clientName, ownerName, clientRequest, budget, deadline, userId, analysis, status } = req.body;
+    const project = await Project.create({
+      userId: userId || undefined,
+      title: title || 'Untitled Project',
+      clientName: clientName || ownerName || 'Direct Client',
+      clientRequest: clientRequest || 'Project requirements',
+      budget: budget ? Number(budget) : undefined,
+      deadline: deadline ? new Date(deadline) : undefined,
+      status: status || 'analyzed',
+      analysis: analysis || {}
+    });
+    return res.status(201).json({ success: true, data: project });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+

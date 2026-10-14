@@ -245,6 +245,7 @@ export const parseUnifiedPrompt = (text) => {
   const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
   const result = {
     title: '',
+    clientName: '',
     clientRequest: '',
     budget: undefined,
     deadline: undefined,
@@ -257,13 +258,15 @@ export const parseUnifiedPrompt = (text) => {
 
   for (const line of lines) {
     const match = line.match(
-      /^(title|project\s*title|description|requirements|brief|budget|deadline|timeline|tech|technologies|stack|notes|context)\s*[:=-]\s*(.*)$/i
+      /^(owner|client|client\s*name|customer|title|project\s*title|description|requirements|brief|budget|deadline|timeline|tech|technologies|stack|notes|context)\s*[:=-]\s*(.*)$/i
     );
     if (match) {
       const rawKey = match[1].toLowerCase().replace(/\s+/g, '');
       const content = match[2].trim();
 
-      if (rawKey.includes('title')) currentKey = 'title';
+      if (rawKey.includes('client') || rawKey.includes('owner') || rawKey.includes('customer'))
+        currentKey = 'client';
+      else if (rawKey.includes('title')) currentKey = 'title';
       else if (rawKey.includes('desc') || rawKey.includes('require') || rawKey.includes('brief'))
         currentKey = 'description';
       else if (rawKey.includes('budget')) currentKey = 'budget';
@@ -278,6 +281,7 @@ export const parseUnifiedPrompt = (text) => {
     }
   }
 
+  if (sections.client) result.clientName = sections.client.trim();
   if (sections.title) result.title = sections.title.trim();
   if (sections.description) result.clientRequest = sections.description.trim();
   if (sections.budget) {

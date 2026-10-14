@@ -18,7 +18,7 @@ export default function SamplePreviewModal({
   onClose,
   onStartAnalyzing
 }) {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('summary');
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
@@ -123,15 +123,24 @@ FreelancerMate AI Partner`
           </div>
         </div>
 
-        {/* Tab Switcher */}
+        {/* Tab Switcher - Ordered: Summary -> Tech Stack -> Flowchart -> Proposal */}
         <div className="fm-sample-tabs">
           <button
             type="button"
-            className={`fm-sample-tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
+            className={`fm-sample-tab-btn ${activeTab === 'summary' ? 'active' : ''}`}
+            onClick={() => setActiveTab('summary')}
           >
             <Layers size={15} />
-            <span>Overview & Features</span>
+            <span>1. Summary & Requirements</span>
+          </button>
+
+          <button
+            type="button"
+            className={`fm-sample-tab-btn ${activeTab === 'stack' ? 'active' : ''}`}
+            onClick={() => setActiveTab('stack')}
+          >
+            <Code2 size={15} />
+            <span>2. Recommended Tech Stack</span>
           </button>
 
           <button
@@ -140,7 +149,7 @@ FreelancerMate AI Partner`
             onClick={() => setActiveTab('flowchart')}
           >
             <GitBranch size={15} />
-            <span>Interactive Flowchart</span>
+            <span>3. Architecture & Flowchart</span>
           </button>
 
           <button
@@ -149,13 +158,13 @@ FreelancerMate AI Partner`
             onClick={() => setActiveTab('proposal')}
           >
             <FileText size={15} />
-            <span>Client Proposal</span>
+            <span>4. Client Proposal</span>
           </button>
         </div>
 
         {/* Tab Body */}
         <div className="fm-sample-body">
-          {activeTab === 'overview' && (
+          {activeTab === 'summary' && (
             <div className="fm-sample-content-view">
               <div className="fm-sample-block">
                 <h4>Project Summary</h4>
@@ -170,7 +179,11 @@ FreelancerMate AI Partner`
                   ))}
                 </ul>
               </div>
+            </div>
+          )}
 
+          {activeTab === 'stack' && (
+            <div className="fm-sample-content-view">
               <div className="fm-sample-block">
                 <h4>Recommended Tech Stack</h4>
                 <div className="fm-sample-stack-grid">
@@ -188,9 +201,9 @@ FreelancerMate AI Partner`
           {activeTab === 'flowchart' && (
             <div className="fm-sample-content-view">
               <FlowchartViewer
-                mermaidCode={sampleData.flowchart}
-                steps={sampleData.flowchartSteps}
-                projectTitle={sampleData.title}
+                flowchartCode={sampleData.flowchart}
+                flowchartSteps={sampleData.flowchartSteps}
+                title={sampleData.title}
               />
             </div>
           )}

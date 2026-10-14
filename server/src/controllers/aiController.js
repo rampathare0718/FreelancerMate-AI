@@ -43,6 +43,8 @@ export const analyzeProject = async (req, res) => {
       prompt: unifiedPrompt,
       title,
       projectTitle,
+      clientName,
+      ownerName,
       clientRequest,
       clientRequirements,
       budget,
@@ -66,6 +68,13 @@ export const analyzeProject = async (req, res) => {
       projectTitle ||
       parsedFields.title ||
       ''
+    ).trim();
+
+    const resolvedClient = (
+      clientName ||
+      ownerName ||
+      parsedFields.clientName ||
+      'Direct Client'
     ).trim();
 
     const resolvedRequest = (
@@ -130,6 +139,7 @@ export const analyzeProject = async (req, res) => {
         projectId,
         {
           status: 'analyzed',
+          clientName: resolvedClient,
           analysis: validatedAnalysis
         },
         { new: true }
@@ -140,6 +150,7 @@ export const analyzeProject = async (req, res) => {
         savedProject = await Project.create({
           userId: userId || undefined,
           title: resolvedTitle,
+          clientName: resolvedClient,
           clientRequest: resolvedRequest,
           budget: budget ? Number(budget) : undefined,
           deadline: deadline ? new Date(deadline) : undefined,
@@ -158,6 +169,7 @@ export const analyzeProject = async (req, res) => {
       message: 'Client project requirements successfully analyzed by Gemma',
       data: {
         title: resolvedTitle,
+        clientName: resolvedClient,
         analysis: validatedAnalysis,
         ...(savedProject ? { project: savedProject } : {})
       }

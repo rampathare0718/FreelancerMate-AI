@@ -12,6 +12,11 @@ const projectSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
+    clientName: {
+      type: String,
+      trim: true,
+      default: 'Direct Client'
+    },
     clientRequest: {
       type: String,
       required: true,
@@ -25,8 +30,8 @@ const projectSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'analyzed', 'completed'],
-      default: 'pending'
+      enum: ['pending', 'analyzed', 'proposal_sent', 'draft', 'completed'],
+      default: 'analyzed'
     },
     analysis: {
       summary: {

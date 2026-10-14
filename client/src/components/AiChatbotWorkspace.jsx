@@ -18,9 +18,12 @@ import {
   Check,
   RefreshCw,
   ArrowLeft,
+  ArrowRight,
   ChevronRight,
   ExternalLink,
-  Plus
+  Plus,
+  HelpCircle,
+  LayoutDashboard
 } from 'lucide-react';
 import FlowchartViewer from './FlowchartViewer';
 
@@ -68,7 +71,8 @@ const SUGGESTED_QUESTIONS = [
 export default function AiChatbotWorkspace({
   currentUser,
   selectedProject,
-  onBackToDashboard
+  onBackToDashboard,
+  onProjectCreated
 }) {
   // Main view toggle: 'chat' | 'deliverables'
   const [activeWorkspaceView, setActiveWorkspaceView] = useState('chat');
@@ -76,15 +80,22 @@ export default function AiChatbotWorkspace({
   // Chat conversation state
   const [messages, setMessages] = useState([]);
   const [promptInput, setPromptInput] = useState('');
+  const [clientNameInput, setClientNameInput] = useState(selectedProject?.clientName || '');
+  const [projectTitleInput, setProjectTitleInput] = useState(selectedProject?.title || '');
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
-  const [deliverablesTab, setDeliverablesTab] = useState('flowchart'); // 'summary' | 'flowchart' | 'stack' | 'roadmap' | 'proposal'
+
+  // REARRANGED ORDER: 'summary' -> 'stack' -> 'flowchart' -> 'proposal'
+  const [deliverablesTab, setDeliverablesTab] = useState('summary');
   const [copiedProposal, setCopiedProposal] = useState(false);
+  const [copiedSummary, setCopiedSummary] = useState(false);
   const chatBottomRef = useRef(null);
 
   // Initialize conversation or load selected project
   useEffect(() => {
     if (selectedProject?.analysis) {
+      setClientNameInput(selectedProject.clientName || '');
+      setProjectTitleInput(selectedProject.title || '');
       setAnalysisResult({
         title: selectedProject.title,
         ...selectedProject.analysis
@@ -92,20 +103,23 @@ export default function AiChatbotWorkspace({
       setMessages([
         {
           role: 'user',
-          text: `Project Loaded: ${selectedProject.title}\n${selectedProject.clientRequest || ''}`
+          text: `Project Loaded: ${selectedProject.title}\nClient: ${selectedProject.clientName || 'Direct Client'}\n${selectedProject.clientRequest || ''}`
         },
         {
           role: 'assistant',
-          text: `I have loaded **${selectedProject.title}** for client **${selectedProject.clientName || 'Client'}**.\n\nYou can ask any follow-up questions here, or switch to the **Project Plan & Flowchart** view to see the full architecture and proposal.`,
+          text: `I have loaded **${selectedProject.title}** for client **${selectedProject.clientName || 'Direct Client'}**.\n\nYou can ask any follow-up questions here, or switch to the **Project Plan** to inspect:\n1. 📋 Summary & Requirements\n2. ⚙️ Recommended Tech Stack\n3. 🔄 Architecture & Flowchart\n4. 📄 Client Proposal`,
           hasDeliverables: true
         }
       ]);
     } else {
       // Clean welcoming initial chat state
+      setClientNameInput('');
+      setProjectTitleInput('');
+      setAnalysisResult(null);
       setMessages([
         {
           role: 'assistant',
-          text: `👋 Hi ${currentUser?.name ? currentUser.name.split(' ')[0] : 'there'}! I'm your **FreelanceMate AI Copilot**.\n\nPaste what your client sent below. I will analyze requirements, recommend the tech stack, estimate timeline and pricing in INR, create an interactive architecture flowchart, and write a client proposal.`,
+          text: `👋 Hi ${currentUser?.name ? currentUser.name.split(' ')[0] : 'there'}! I'm your **FreelanceMate AI Copilot**.\n\nEnter your **Client/Owner Name**, **Project Title**, and requirements below. I will analyze the scope in this structured format:\n1. 📋 **Summary & Requirements**\n2. ⚙️ **Recommended Tech Stack**\n3. 🔄 **Architecture & Interactive Flowchart**\n4. 📄 **Client Proposal with Pricing in INR**`,
           showTemplateTip: true
         }
       ]);
@@ -125,6 +139,16 @@ export default function AiChatbotWorkspace({
   // 1-Click sample brief
   const handleApplySample = (sample) => {
     setPromptInput(sample.text);
+    if (sample.label.includes('Bakery')) {
+      setClientNameInput('Sweet Crumbs');
+      setProjectTitleInput('Bakery ordering website');
+    } else if (sample.label.includes('E-Commerce')) {
+      setClientNameInput('Organic Glow');
+      setProjectTitleInput('D2C Organic Skincare Store');
+    } else if (sample.label.includes('Booking')) {
+      setClientNameInput('FitHub');
+      setProjectTitleInput('Fitness Trainer Appointment Booking');
+    }
   };
 
   // Main Submit handler (Analysis or Follow-up)
@@ -177,12 +201,16 @@ export default function AiChatbotWorkspace({
     try {
       const res = await axios
         .post('/api/ai/analyze', {
+          title: projectTitleInput.trim() || undefined,
+          clientName: clientNameInput.trim() || undefined,
           prompt: textToSend.trim(),
           userId: currentUser?._id,
           saveToDb: true
         })
         .catch(() =>
           axios.post('http://localhost:5000/api/ai/analyze', {
+            title: projectTitleInput.trim() || undefined,
+            clientName: clientNameInput.trim() || undefined,
             prompt: textToSend.trim(),
             userId: currentUser?._id,
             saveToDb: true
@@ -191,15 +219,32 @@ export default function AiChatbotWorkspace({
 
       if (res.data?.success && res.data.data?.analysis) {
         const analysis = {
-          title: res.data.data.title || 'Client Project Plan',
+          title: res.data.data.title || projectTitleInput.trim() || 'Client Project Plan',
           ...res.data.data.analysis
         };
+        const resolvedClient = res.data.data.clientName || clientNameInput.trim() || 'Direct Client';
         setAnalysisResult(analysis);
+
+        const createdProj = {
+          _id: res.data.data.project?._id || `proj-${Date.now()}`,
+          title: analysis.title,
+          clientName: resolvedClient,
+          status: 'analyzed',
+          timeEstimate: analysis.timeEstimate || '3-4 wks',
+          pricingEstimate: analysis.pricingEstimate || '₹55,000 INR',
+          analysis: analysis,
+          clientRequest: textToSend.trim()
+        };
+
+        if (onProjectCreated) {
+          onProjectCreated(createdProj);
+        }
+
         setMessages((prev) => [
           ...prev,
           {
             role: 'assistant',
-            text: `✅ **Analysis Complete for ${analysis.title}!**\n\nI have generated the full functional breakdown, interactive architecture flowchart, tech stack, roadmap, and client proposal.\n\nEstimated Timeline: **${analysis.timeEstimate || '3-4 Weeks'}** | Pricing: **${analysis.pricingEstimate || '₹55,000 INR'}**`,
+            text: `✅ **Analysis Complete for ${analysis.title}!** (Client: **${resolvedClient}**)\n\nI have generated the plan in the requested order:\n1. 📋 **Summary & Requirements**\n2. ⚙️ **Recommended Tech Stack**\n3. 🔄 **Architecture & Interactive Flowchart**\n4. 📄 **Client Proposal**\n\nEstimated Timeline: **${analysis.timeEstimate || '3-4 Weeks'}** | Pricing: **${analysis.pricingEstimate || '₹55,000 INR'}**\n\n*(This project has been added to your Dashboard)*`,
             hasDeliverables: true
           }
         ]);
@@ -216,67 +261,102 @@ export default function AiChatbotWorkspace({
   // Fallback demo analysis if Ollama is offline
   const fallbackAnalysis = (userPrompt) => {
     const isBakery = userPrompt.toLowerCase().includes('bakery');
+    const resolvedTitle = projectTitleInput.trim() || (isBakery ? 'Artisan Bakery Online Ordering' : 'Client Full-Stack Web Platform');
+    const resolvedClient = clientNameInput.trim() || (isBakery ? 'Sweet Crumbs' : 'Direct Client');
+
     const demo = {
-      title: isBakery ? 'Artisan Bakery Ordering & Delivery System' : 'Client Full-Stack Web Platform',
-      summary: 'A responsive full-stack platform featuring seamless customer ordering, automated time-slot allocation with capacity limits, secure UPI/Card checkout, and real-time operational notifications.',
+      title: resolvedTitle,
+      summary: `A full-stack responsive web solution custom-tailored for ${resolvedClient}. Features an intuitive user workflow, robust backend API, real-time transaction processing, and a scalable database architecture.`,
       requirements: [
-        'Responsive mobile-first user catalog and item selection',
-        'Dynamic date & time-slot selector with cutoff thresholds',
-        'Secure payment gateway integration with webhook confirmation',
-        'Admin dashboard for inventory and order management',
-        'Automated order confirmation alerts via WhatsApp/SMS'
+        'Responsive mobile-first user interface with smooth navigation',
+        'Secure transactions and user workflow processing',
+        'Database persistence with validation and automated timestamps',
+        'Admin dashboard with status tracking and operational metrics',
+        'Automated alerts and notifications'
       ],
       techStack: {
-        frontend: 'React 19 + TailwindCSS (Fast responsive storefront)',
-        backend: 'Node.js + Express.js REST API (Order handling & webhooks)',
-        database: 'MongoDB Atlas (Flexible schema for products & orders)',
-        payment: 'Razorpay Payment Gateway (UPI QR, Cards, NetBanking)',
+        frontend: 'React 19 + TailwindCSS',
+        backend: 'Node.js + Express.js REST API',
+        database: 'MongoDB Atlas',
+        payment: 'Razorpay Payment Gateway (UPI & Cards)',
         notifications: 'Twilio / WhatsApp Business API'
       },
       timeEstimate: '3 to 4 Weeks',
       pricingEstimate: '₹45,000 - ₹60,000 INR',
       flowchart: `graph TD
-    A[Customer Selects Items] --> B[Chooses Delivery Time Slot]
-    B --> C{Slot Capacity Available?}
-    C -- No --> B
-    C -- Yes --> D[Initiates Razorpay UPI Checkout]
-    D --> E[Payment Webhook Verified]
-    E --> F[Order Saved in MongoDB]
-    F --> G[WhatsApp & SMS Confirmation Sent]`,
+    A[${resolvedClient} User] --> B[Browse System]
+    B --> C[Execute Core Action]
+    C --> D[Process Transaction]
+    D --> E[Stored in MongoDB]`,
       flowchartSteps: [
-        { step: '1', actor: 'Customer', action: 'Browses catalog and adds items to cart', outcome: 'Ready for checkout' },
-        { step: '2', actor: 'Slot Engine', action: 'Validates delivery date and time-slot capacity', outcome: 'Locks slot reservation' },
-        { step: '3', actor: 'Razorpay', action: 'Processes UPI transaction', outcome: 'Dispatches signed webhook event' },
-        { step: '4', actor: 'Express Server', action: 'Validates payment signature and stores order in MongoDB', outcome: 'Updates order status' },
-        { step: '5', actor: 'Notification Engine', action: 'Dispatches confirmation alert to customer and kitchen', outcome: 'Delivery dispatched' }
+        { step: '1', actor: 'Client User', action: 'Initiates request', outcome: 'Action registered' },
+        { step: '2', actor: 'Express API', action: 'Processes business logic', outcome: 'Validated payload' },
+        { step: '3', actor: 'MongoDB', action: 'Persists records', outcome: 'Record updated' }
       ],
-      proposal: `Subject: Project Proposal & Development Plan
+      missingQuestions: [
+        'What is the maximum number of daily transactions or users anticipated?',
+        'Do you already have a payment gateway or WhatsApp API account configured?',
+        'Are there any specific third-party APIs or legacy systems to integrate with?'
+      ],
+      proposal: `Subject: Project Proposal & Development Plan: ${resolvedTitle}
 
-Dear Client,
+Dear ${resolvedClient},
 
-Thank you for sharing your project vision! We have designed an end-to-end roadmap to deliver your platform on time and with zero technical surprises.
+Thank you for sharing your project requirements! We have created an end-to-end development roadmap to build and launch your platform on time.
 
-1. DELIVERABLES:
-- High-performance responsive web application.
-- Seamless booking/ordering flow with automatic time-slot allocation.
-- Razorpay payment gateway integration with instant receipt generation.
-- Admin dashboard to manage catalog, slots, and customer orders.
+1. SCOPE & KEY DELIVERABLES:
+- Modern, responsive web platform tailored for ${resolvedClient}.
+- Robust backend API with secure validation and error handling.
+- Integrated payment and transaction processing with instant receipts.
+- Admin dashboard for monitoring real-time metrics and records.
 
-2. TIMELINE & INVESTMENT:
+2. ESTIMATED TIMELINE & INVESTMENT:
 - Timeline: 3-4 Weeks from kickoff.
-- Total Investment: ₹52,000 INR (Milestone phased: 40% Advance, 40% Beta Demo, 20% Production Launch).
+- Total Investment: ₹50,000 INR
+- Milestones: 40% Advance, 40% Beta Demo, 20% Production Handover.
 
 Best regards,
 FreelancerMate AI Partner`
     };
 
     setAnalysisResult(demo);
+
+    const fallbackProj = {
+      _id: `proj-${Date.now()}`,
+      title: resolvedTitle,
+      clientName: resolvedClient,
+      status: 'analyzed',
+      timeEstimate: '3 to 4 Weeks',
+      pricingEstimate: '₹45,000 - ₹60,000 INR',
+      analysis: demo,
+      clientRequest: userPrompt
+    };
+
+    if (onProjectCreated) {
+      onProjectCreated(fallbackProj);
+    }
+
     setMessages((prev) => [
       ...prev,
       {
         role: 'assistant',
-        text: `✅ **Analysis Complete for ${demo.title}!**\n\nI have generated the full functional breakdown, interactive architecture flowchart, tech stack, roadmap, and client proposal.\n\nEstimated Timeline: **${demo.timeEstimate}** | Pricing: **${demo.pricingEstimate}**`,
+        text: `✅ **Analysis Complete for ${demo.title}!** (Client: **${resolvedClient}**)\n\nI have generated the plan in the requested order:\n1. 📋 **Summary & Requirements**\n2. ⚙️ **Recommended Tech Stack**\n3. 🔄 **Architecture & Interactive Flowchart**\n4. 📄 **Client Proposal**\n\nEstimated Timeline: **${demo.timeEstimate}** | Pricing: **${demo.pricingEstimate}**\n\n*(This project has been added to your Dashboard)*`,
         hasDeliverables: true
+      }
+    ]);
+  };
+
+  const handleStartNewProject = () => {
+    setAnalysisResult(null);
+    setClientNameInput('');
+    setProjectTitleInput('');
+    setPromptInput('');
+    setActiveWorkspaceView('chat');
+    setMessages([
+      {
+        role: 'assistant',
+        text: `👋 Let's scope another project!\n\nEnter the **Client / Owner Name**, **Project Title**, and **Requirements Prompt** below. I'll analyze the scope, generate the flowchart, and update your dashboard.`,
+        showTemplateTip: true
       }
     ]);
   };
@@ -294,9 +374,17 @@ FreelancerMate AI Partner`
     setTimeout(() => setCopiedProposal(false), 2000);
   };
 
+  const handleCopySummary = () => {
+    if (!analysisResult) return;
+    const text = `PROJECT: ${analysisResult.title}\nTIMELINE: ${analysisResult.timeEstimate}\nBUDGET: ${analysisResult.pricingEstimate}\n\nEXECUTIVE SUMMARY:\n${analysisResult.summary}\n\nREQUIREMENTS:\n${(analysisResult.requirements || []).map((r, i) => `${i + 1}. ${r}`).join('\n')}`;
+    navigator.clipboard.writeText(text);
+    setCopiedSummary(true);
+    setTimeout(() => setCopiedSummary(false), 2000);
+  };
+
   return (
     <div className="fm-chat-workspace-root">
-      {/* Top Workspace Header Bar */}
+      {/* Universal Top Workspace Header Bar */}
       <header className="fm-chat-header-bar">
         <div className="fm-chat-header-left">
           <button
@@ -308,12 +396,24 @@ FreelancerMate AI Partner`
             <ArrowLeft size={16} />
             <span>Dashboard</span>
           </button>
+
           <div className="fm-chat-title-group">
-            <h2>{analysisResult?.title || 'AI Scoper Copilot'}</h2>
+            <h2>{analysisResult?.title || (projectTitleInput || 'AI Scoper Copilot')}</h2>
             <span className="fm-badge-status">
               {analysisResult ? 'Plan Ready' : 'Awaiting Brief'}
             </span>
           </div>
+
+          <button
+            type="button"
+            className="fm-btn-pill-action"
+            onClick={handleStartNewProject}
+            title="Scope another new project"
+            style={{ marginLeft: '0.75rem' }}
+          >
+            <Plus size={14} />
+            <span>+ New Project</span>
+          </button>
         </div>
 
         {/* View Switcher: Chatbot vs Project Plan */}
@@ -331,7 +431,11 @@ FreelancerMate AI Partner`
           <button
             type="button"
             className={`fm-switch-btn ${activeWorkspaceView === 'deliverables' ? 'active' : ''}`}
-            onClick={() => setActiveWorkspaceView('deliverables')}
+            onClick={() => {
+              setActiveWorkspaceView('deliverables');
+              // Ensure we open with Summary by default as requested
+              if (!deliverablesTab) setDeliverablesTab('summary');
+            }}
             disabled={!analysisResult}
             title={!analysisResult ? 'Generate a project plan first' : 'View full plan and flowchart'}
           >
@@ -402,16 +506,19 @@ FreelancerMate AI Partner`
                         </div>
                       )}
 
-                      {/* Callout button to view Deliverables */}
+                      {/* Callout button to view Deliverables (Opens Summary first) */}
                       {msg.hasDeliverables && (
                         <div className="fm-deliverables-callout">
                           <button
                             type="button"
                             className="fm-btn-primary fm-btn-view-deliverables"
-                            onClick={() => setActiveWorkspaceView('deliverables')}
+                            onClick={() => {
+                              setDeliverablesTab('summary');
+                              setActiveWorkspaceView('deliverables');
+                            }}
                           >
-                            <GitBranch size={16} />
-                            <span>View Full Project Plan & Flowchart</span>
+                            <FileText size={16} />
+                            <span>View Summary, Tech Stack & Flowchart</span>
                             <ChevronRight size={16} />
                           </button>
                         </div>
@@ -465,6 +572,34 @@ FreelancerMate AI Partner`
 
             {/* Bottom Input Prompt Bar */}
             <form onSubmit={handleSendMessage} className="fm-chat-input-bar">
+              {/* If analyzing a new project, enter Owner Name and Title first */}
+              {!analysisResult && (
+                <div className="fm-chat-pre-inputs-row">
+                  <div className="fm-chat-pre-input-wrap">
+                    <label className="fm-chat-pre-label">Owner / Client Name *</label>
+                    <input
+                      type="text"
+                      className="fm-chat-meta-input"
+                      placeholder="e.g. Sweet Crumbs Bakery, FitHub"
+                      value={clientNameInput}
+                      onChange={(e) => setClientNameInput(e.target.value)}
+                      disabled={isAiThinking}
+                    />
+                  </div>
+                  <div className="fm-chat-pre-input-wrap">
+                    <label className="fm-chat-pre-label">Project Title *</label>
+                    <input
+                      type="text"
+                      className="fm-chat-meta-input"
+                      placeholder="e.g. Bakery ordering website"
+                      value={projectTitleInput}
+                      onChange={(e) => setProjectTitleInput(e.target.value)}
+                      disabled={isAiThinking}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="fm-input-container">
                 <textarea
                   className="fm-chat-textarea"
@@ -472,7 +607,7 @@ FreelancerMate AI Partner`
                   placeholder={
                     analysisResult
                       ? 'Ask a follow-up question (e.g. Can we reduce timeline to 2 weeks?)...'
-                      : 'Paste client message or prompt here (Title, Description, Budget, Deadline, Tech)...'
+                      : 'Paste client message or prompt here (features, budget, deadline, tech preferences)...'
                   }
                   value={promptInput}
                   onChange={(e) => setPromptInput(e.target.value)}
@@ -503,9 +638,56 @@ FreelancerMate AI Partner`
 
         {/* ============================================================
             VIEW 2: SEPARATE INFORMATION / DELIVERABLES CANVAS
+            REARRANGED EXACTLY:
+            1. Summary & Requirements
+            2. Recommended Tech Stack
+            3. Architecture & Flowchart
+            4. Client Proposal
            ============================================================ */}
         {activeWorkspaceView === 'deliverables' && analysisResult && (
           <div className="fm-deliverables-canvas">
+            {/* Top Navigation & Breadcrumb Bar */}
+            <div className="fm-deliv-breadcrumb-bar">
+              <div className="fm-breadcrumb-left">
+                <button
+                  type="button"
+                  className="fm-btn-crumb-dash"
+                  onClick={onBackToDashboard}
+                >
+                  <LayoutDashboard size={14} />
+                  <span>Dashboard</span>
+                </button>
+                <span className="fm-crumb-sep">/</span>
+                <span className="fm-crumb-project">{analysisResult.title}</span>
+                <span className="fm-crumb-sep">/</span>
+                <span className="fm-crumb-active-tab">
+                  {deliverablesTab === 'summary' && 'Summary & Requirements'}
+                  {deliverablesTab === 'stack' && 'Recommended Tech Stack'}
+                  {deliverablesTab === 'flowchart' && 'Architecture & Flowchart'}
+                  {deliverablesTab === 'proposal' && 'Client Proposal'}
+                </span>
+              </div>
+
+              <div className="fm-breadcrumb-right">
+                <button
+                  type="button"
+                  className="fm-btn-chat-switch"
+                  onClick={() => setActiveWorkspaceView('chat')}
+                >
+                  <MessageSquare size={15} />
+                  <span>💬 Open AI Chat</span>
+                </button>
+                <button
+                  type="button"
+                  className="fm-btn-dash-switch"
+                  onClick={onBackToDashboard}
+                >
+                  <ArrowLeft size={15} />
+                  <span>Back to Dashboard</span>
+                </button>
+              </div>
+            </div>
+
             {/* Deliverables Meta Bar */}
             <div className="fm-deliv-header">
               <div className="fm-deliv-title-box">
@@ -517,7 +699,11 @@ FreelancerMate AI Partner`
                   </span>
                   <span className="fm-meta-badge pricing">
                     <Coins size={13} />
-                    <span>Budget: {analysisResult.pricingEstimate || '₹55,000 INR'}</span>
+                    <span>Estimated Budget: {analysisResult.pricingEstimate || '₹55,000 INR'}</span>
+                  </span>
+                  <span className="fm-meta-badge status">
+                    <CheckCircle2 size={13} />
+                    <span>Analyzed with Gemma AI</span>
                   </span>
                 </div>
               </div>
@@ -532,76 +718,156 @@ FreelancerMate AI Partner`
               </button>
             </div>
 
-            {/* Deliverables Sub-Navigation Tabs */}
+            {/* Deliverables Sub-Navigation Tabs (REORDERED EXACTLY AS REQUESTED) */}
             <div className="fm-deliv-tabs-nav">
-              <button
-                type="button"
-                className={`fm-deliv-tab ${deliverablesTab === 'flowchart' ? 'active' : ''}`}
-                onClick={() => setDeliverablesTab('flowchart')}
-              >
-                <GitBranch size={15} />
-                <span>Architecture & Flowchart</span>
-              </button>
-
+              {/* 1. Summary & Requirements */}
               <button
                 type="button"
                 className={`fm-deliv-tab ${deliverablesTab === 'summary' ? 'active' : ''}`}
                 onClick={() => setDeliverablesTab('summary')}
               >
                 <Layers size={15} />
-                <span>Summary & Requirements</span>
+                <span>1. Summary & Requirements</span>
               </button>
 
+              {/* 2. Recommended Tech Stack */}
               <button
                 type="button"
                 className={`fm-deliv-tab ${deliverablesTab === 'stack' ? 'active' : ''}`}
                 onClick={() => setDeliverablesTab('stack')}
               >
                 <Code2 size={15} />
-                <span>Recommended Tech Stack</span>
+                <span>2. Recommended Tech Stack</span>
               </button>
 
+              {/* 3. Architecture & Flowchart */}
+              <button
+                type="button"
+                className={`fm-deliv-tab ${deliverablesTab === 'flowchart' ? 'active' : ''}`}
+                onClick={() => setDeliverablesTab('flowchart')}
+              >
+                <GitBranch size={15} />
+                <span>3. Architecture & Flowchart</span>
+              </button>
+
+              {/* 4. Client Proposal */}
               <button
                 type="button"
                 className={`fm-deliv-tab ${deliverablesTab === 'proposal' ? 'active' : ''}`}
                 onClick={() => setDeliverablesTab('proposal')}
               >
                 <FileText size={15} />
-                <span>Client Proposal</span>
+                <span>4. Client Proposal</span>
               </button>
             </div>
 
             {/* Tab Body */}
             <div className="fm-deliv-content-card">
-              {deliverablesTab === 'flowchart' && (
-                <div>
-                  <FlowchartViewer
-                    mermaidCode={analysisResult.flowchart}
-                    steps={analysisResult.flowchartSteps || []}
-                    projectTitle={analysisResult.title}
-                  />
-                </div>
-              )}
-
+              {/* ============================================================
+                  TAB 1: SUMMARY & REQUIREMENTS (Proper, comprehensive, deep)
+                 ============================================================ */}
               {deliverablesTab === 'summary' && (
                 <div className="fm-deliv-section">
-                  <div className="fm-deliv-block">
-                    <h3>Executive Summary</h3>
-                    <p>{analysisResult.summary}</p>
+                  <div className="fm-summary-actions-bar">
+                    <span className="fm-sec-kicker">Project Specification</span>
+                    <div className="fm-summary-btn-group">
+                      <button
+                        type="button"
+                        className="fm-btn-copy"
+                        onClick={handleCopySummary}
+                      >
+                        {copiedSummary ? <Check size={14} /> : <Copy size={14} />}
+                        <span>{copiedSummary ? 'Copied Summary' : 'Copy Summary'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="fm-btn-pill-action"
+                        onClick={() => {
+                          setActiveWorkspaceView('chat');
+                          handleSendMessage(null, 'Please provide more details on the functional requirements.');
+                        }}
+                      >
+                        <MessageSquare size={13} />
+                        <span>Refine in Chat</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="fm-deliv-block" style={{ marginTop: '1.5rem' }}>
-                    <h3>Functional & Non-Functional Requirements</h3>
-                    <ul className="fm-deliv-list">
+                  {/* Executive Overview Box */}
+                  <div className="fm-deliv-block executive-box">
+                    <h3>Executive Project Overview</h3>
+                    <p className="fm-summary-main-p">{analysisResult.summary}</p>
+
+                    <div className="fm-overview-metrics-grid">
+                      <div className="fm-ov-metric">
+                        <span className="fm-ov-label">Duration</span>
+                        <strong className="fm-ov-val">{analysisResult.timeEstimate || '3-4 Weeks'}</strong>
+                      </div>
+                      <div className="fm-ov-metric">
+                        <span className="fm-ov-label">Recommended Budget</span>
+                        <strong className="fm-ov-val green">{analysisResult.pricingEstimate || '₹55,000 INR'}</strong>
+                      </div>
+                      <div className="fm-ov-metric">
+                        <span className="fm-ov-label">Deployment Scope</span>
+                        <strong className="fm-ov-val">Full-Stack Production Ready</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Functional Requirements */}
+                  <div className="fm-deliv-block" style={{ marginTop: '2rem' }}>
+                    <div className="fm-block-header-with-badge">
+                      <h3>Functional Requirements Checklist</h3>
+                      <span className="fm-badge-count">
+                        {(analysisResult.requirements || []).length} Deliverables
+                      </span>
+                    </div>
+                    <ul className="fm-deliv-list modern">
                       {(analysisResult.requirements || []).map((req, i) => (
-                        <li key={i}>{req}</li>
+                        <li key={i}>
+                          <div className="fm-req-item-content">
+                            <strong>Deliverable {i + 1}:</strong> {req}
+                          </div>
+                        </li>
                       ))}
                     </ul>
                   </div>
 
+                  {/* Non-Functional & Security Specifications */}
+                  <div className="fm-deliv-block" style={{ marginTop: '2rem' }}>
+                    <h3>Non-Functional Specifications & Standards</h3>
+                    <div className="fm-nonfunc-grid">
+                      <div className="fm-nonfunc-card">
+                        <ShieldCheck size={18} color="#4338ca" />
+                        <div>
+                          <strong>Security & Auth</strong>
+                          <p>Bcrypt salt rounds, JWT access tokens, rate-limiting on sensitive auth routes.</p>
+                        </div>
+                      </div>
+                      <div className="fm-nonfunc-card">
+                        <Clock size={18} color="#4338ca" />
+                        <div>
+                          <strong>Performance Target</strong>
+                          <p>Under 200ms API response time, optimized database compound indexes.</p>
+                        </div>
+                      </div>
+                      <div className="fm-nonfunc-card">
+                        <CheckCircle2 size={18} color="#4338ca" />
+                        <div>
+                          <strong>Mobile-First Design</strong>
+                          <p>100% responsive fluid layouts for mobile, tablet, and desktop screens.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Clarifying Questions for Scope Creep Prevention */}
                   {analysisResult.missingQuestions?.length > 0 && (
-                    <div className="fm-deliv-block" style={{ marginTop: '1.5rem' }}>
-                      <h3>Clarifying Questions for Client</h3>
+                    <div className="fm-deliv-block" style={{ marginTop: '2rem' }}>
+                      <div className="fm-block-header-with-badge">
+                        <h3>Scope Clarifications to Ask Client</h3>
+                        <span className="fm-badge-warning">Prevents Scope Creep</span>
+                      </div>
                       <ul className="fm-deliv-list questions">
                         {analysisResult.missingQuestions.map((q, i) => (
                           <li key={i}>{q}</li>
@@ -609,12 +875,55 @@ FreelancerMate AI Partner`
                       </ul>
                     </div>
                   )}
+
+                  {/* Tab Navigation Footer */}
+                  <div className="fm-tab-nav-footer">
+                    <button
+                      type="button"
+                      className="fm-btn-secondary"
+                      onClick={onBackToDashboard}
+                    >
+                      <ArrowLeft size={15} />
+                      <span>Back to Dashboard</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="fm-btn-primary"
+                      onClick={() => setDeliverablesTab('stack')}
+                    >
+                      <span>Next: Recommended Tech Stack</span>
+                      <ArrowRight size={15} />
+                    </button>
+                  </div>
                 </div>
               )}
 
+              {/* ============================================================
+                  TAB 2: RECOMMENDED TECH STACK
+                 ============================================================ */}
               {deliverablesTab === 'stack' && (
                 <div className="fm-deliv-section">
-                  <h3>Recommended Tech Stack Architecture</h3>
+                  <div className="fm-summary-actions-bar">
+                    <span className="fm-sec-kicker">Component Stacks</span>
+                    <button
+                      type="button"
+                      className="fm-btn-pill-action"
+                      onClick={() => {
+                        setActiveWorkspaceView('chat');
+                        handleSendMessage(null, 'Why were these specific technologies selected instead of alternatives?');
+                      }}
+                    >
+                      <MessageSquare size={13} />
+                      <span>Ask Tech Questions in Chat</span>
+                    </button>
+                  </div>
+
+                  <h3>Recommended Full-Stack Architecture</h3>
+                  <p className="fm-section-intro">
+                    Curated technologies selected specifically for rapid development, low maintenance, and effortless scalability.
+                  </p>
+
                   <div className="fm-stack-cards-grid">
                     {Object.entries(analysisResult.techStack || {}).map(([layer, tech]) => (
                       <div key={layer} className="fm-stack-box">
@@ -625,15 +934,79 @@ FreelancerMate AI Partner`
                       </div>
                     ))}
                   </div>
+
+                  {/* Tab Navigation Footer */}
+                  <div className="fm-tab-nav-footer">
+                    <button
+                      type="button"
+                      className="fm-btn-secondary"
+                      onClick={() => setDeliverablesTab('summary')}
+                    >
+                      <ArrowLeft size={15} />
+                      <span>Previous: Summary & Requirements</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="fm-btn-primary"
+                      onClick={() => setDeliverablesTab('flowchart')}
+                    >
+                      <span>Next: Architecture & Flowchart</span>
+                      <ArrowRight size={15} />
+                    </button>
+                  </div>
                 </div>
               )}
 
+              {/* ============================================================
+                  TAB 3: ARCHITECTURE & FLOWCHART (Interactive, beautiful, deep)
+                 ============================================================ */}
+              {deliverablesTab === 'flowchart' && (
+                <div>
+                  <FlowchartViewer
+                    flowchartCode={analysisResult.flowchart}
+                    mermaidCode={analysisResult.flowchart}
+                    flowchartSteps={analysisResult.flowchartSteps || []}
+                    steps={analysisResult.flowchartSteps || []}
+                    title={analysisResult.title}
+                    onAskFollowUp={(question) => {
+                      setActiveWorkspaceView('chat');
+                      handleSendMessage(null, question);
+                    }}
+                  />
+
+                  {/* Tab Navigation Footer */}
+                  <div className="fm-tab-nav-footer">
+                    <button
+                      type="button"
+                      className="fm-btn-secondary"
+                      onClick={() => setDeliverablesTab('stack')}
+                    >
+                      <ArrowLeft size={15} />
+                      <span>Previous: Recommended Tech Stack</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="fm-btn-primary"
+                      onClick={() => setDeliverablesTab('proposal')}
+                    >
+                      <span>Next: Client Proposal</span>
+                      <ArrowRight size={15} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ============================================================
+                  TAB 4: CLIENT PROPOSAL (Ready to send with 1-click copy)
+                 ============================================================ */}
               {deliverablesTab === 'proposal' && (
                 <div className="fm-deliv-section">
                   <div className="fm-proposal-header-row">
                     <div>
                       <h3>Ready-to-Send Client Proposal</h3>
-                      <p>Formatted and ready to copy into your email or freelance platform pitch.</p>
+                      <p>Formatted professional pitch ready to copy and send via email, Upwork, or WhatsApp.</p>
                     </div>
                     <button
                       type="button"
@@ -648,6 +1021,27 @@ FreelancerMate AI Partner`
                   <pre className="fm-proposal-pre-canvas">
                     {analysisResult.proposal || 'Proposal not generated yet.'}
                   </pre>
+
+                  {/* Tab Navigation Footer */}
+                  <div className="fm-tab-nav-footer">
+                    <button
+                      type="button"
+                      className="fm-btn-secondary"
+                      onClick={() => setDeliverablesTab('flowchart')}
+                    >
+                      <ArrowLeft size={15} />
+                      <span>Previous: Architecture & Flowchart</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="fm-btn-primary"
+                      onClick={onBackToDashboard}
+                    >
+                      <LayoutDashboard size={15} />
+                      <span>Done • Return to Dashboard</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

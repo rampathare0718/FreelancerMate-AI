@@ -18,6 +18,12 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSampleModalOpen, setIsSampleModalOpen] = useState(false);
 
+  const [customProjects, setCustomProjects] = useState([]);
+
+  const handleProjectCreated = (newProject) => {
+    setCustomProjects((prev) => [newProject, ...prev.filter(p => p._id !== newProject._id)]);
+  };
+
   // Restore authenticated session from localStorage
   useEffect(() => {
     try {
@@ -136,6 +142,8 @@ export default function App() {
         {currentView === 'dashboard' && (
           <Dashboard
             currentUser={currentUser}
+            customProjects={customProjects}
+            onProjectCreated={handleProjectCreated}
             onNewProject={handleOpenNewProject}
             onSelectProject={handleSelectProject}
             onGoToHome={() => setCurrentView('home')}
@@ -148,6 +156,7 @@ export default function App() {
           <AiChatbotWorkspace
             currentUser={currentUser}
             selectedProject={selectedProject}
+            onProjectCreated={handleProjectCreated}
             onBackToDashboard={() => setCurrentView('dashboard')}
           />
         )}
