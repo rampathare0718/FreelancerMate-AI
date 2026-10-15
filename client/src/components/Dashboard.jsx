@@ -23,6 +23,7 @@ import {
 import ProposalsView from './ProposalsView';
 import ClientProposalModal from './ClientProposalModal';
 import SettingsView from './SettingsView';
+import FreelanceMateLogo from './FreelanceMateLogo';
 
 const FORMAT_TEMPLATE = `Description: [Client requirements & core features]
 Budget: [e.g. ₹60,000 INR (Optional)]
@@ -284,7 +285,7 @@ export default function Dashboard({
             onClick={onGoToHome}
             title="FreelanceMate AI - Home"
           >
-            <h2>FreelanceMate AI</h2>
+            <FreelanceMateLogo size="sm" />
           </button>
 
           <nav className="fm-sidebar-nav">

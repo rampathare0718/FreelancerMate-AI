@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { LogIn, ArrowLeft, AlertCircle, CheckCircle2, Lock, Mail } from 'lucide-react';
+import FreelanceMateLogo from './FreelanceMateLogo';
 
 export default function LoginPage({
   onLoginSuccess,
@@ -65,8 +66,8 @@ export default function LoginPage({
         </button>
 
         <div className="fm-auth-header">
-          <div className="fm-auth-icon-badge">
-            <LogIn size={22} color="#4338ca" />
+          <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'center' }}>
+            <FreelanceMateLogo size="lg" />
           </div>
           <h2 className="fm-auth-title">Welcome Back</h2>
           <p className="fm-auth-subtitle">

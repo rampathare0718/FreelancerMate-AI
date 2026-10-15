@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ShieldCheck
 } from 'lucide-react';
+import FreelanceMateLogo from './FreelanceMateLogo';
 
 export default function Navbar({
   currentView,
@@ -18,14 +19,14 @@ export default function Navbar({
   return (
     <header className="fm-header">
       <div className="fm-header-container">
-        {/* Brand Logo */}
+        {/* Brand Logo with Glowing SVG Emblem */}
         <button
           type="button"
           className="fm-brand-btn"
           onClick={() => setCurrentView('home')}
           title="FreelanceMate AI - Home"
         >
-          <span className="fm-brand-text">FreelanceMate AI</span>
+          <FreelanceMateLogo size="md" />
         </button>
 
         {/* Navigation Items */}

@@ -48,8 +48,8 @@ export default function HomePage({
 
             <h1 className="fm-hero-headline">
               Turn a client <br />
-              message into a full <br />
-              project plan.
+              message into a <span className="fm-gradient-text">full</span> <br />
+              <span className="fm-gradient-text">project plan.</span>
             </h1>
 
             <p className="fm-hero-subtext">

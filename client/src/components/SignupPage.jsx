@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { UserPlus, ArrowLeft, AlertCircle, CheckCircle2, User, Mail, Lock, Calendar } from 'lucide-react';
+import FreelanceMateLogo from './FreelanceMateLogo';
 
 export default function SignupPage({
   onSignupSuccess,
@@ -86,8 +87,8 @@ export default function SignupPage({
         </button>
 
         <div className="fm-auth-header">
-          <div className="fm-auth-icon-badge">
-            <UserPlus size={22} color="#4338ca" />
+          <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'center' }}>
+            <FreelanceMateLogo size="lg" />
           </div>
           <h2 className="fm-auth-title">Create your free account</h2>
           <p className="fm-auth-subtitle">

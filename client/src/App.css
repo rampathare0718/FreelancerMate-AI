@@ -1,5 +1,5 @@
 /* ==========================================================
-   FreelanceMate AI - Modern Light Theme Stylesheet
+   FreelanceMate AI - Futuristic Cosmic Dark Theme Stylesheet
    Matching Homepage Mockup & Full Application UI
    ========================================================== */
 
@@ -8,8 +8,8 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #fafbfe;
-  color: #0f172a;
+  background-color: transparent;
+  color: #f8fafc;
 }
 
 .fm-container {
@@ -24,21 +24,22 @@
 }
 
 /* ==========================================================
-   Top Header Navigation
+   Top Header Navigation (Matching Dark Glassmorphic Style)
    ========================================================== */
 .fm-header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid #f1f5f9;
+  background: rgba(8, 12, 23, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .fm-header-container {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 1.1rem 1.5rem;
+  padding: 1.15rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -51,12 +52,18 @@
   cursor: pointer;
   padding: 0;
   text-align: left;
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.15s ease;
+}
+.fm-brand-btn:hover {
+  transform: translateY(-1px);
 }
 
 .fm-brand-text {
   font-size: 1.35rem;
   font-weight: 700;
-  color: #1e1b4b;
+  color: #ffffff;
   letter-spacing: -0.025em;
   font-family: var(--font-family);
 }
@@ -64,7 +71,7 @@
 .fm-nav-links {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 2.2rem;
 }
 
 .fm-nav-link {
@@ -72,39 +79,41 @@
   border: none;
   font-size: 0.95rem;
   font-weight: 500;
-  color: #475569;
+  color: #94a3b8;
   cursor: pointer;
   padding: 0.4rem 0.2rem;
-  transition: color 0.15s ease;
+  transition: all 0.15s ease;
   font-family: inherit;
 }
 
 .fm-nav-link:hover,
 .fm-nav-link.active {
-  color: #0f172a;
-  font-weight: 600;
+  color: #ffffff;
 }
 
 .fm-auth-nav-group,
 .fm-user-nav-group {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .fm-login-link {
-  color: #0f172a;
+  color: #ffffff !important;
   font-weight: 600;
+}
+.fm-login-link:hover {
+  color: #c7d2fe !important;
 }
 
 /* Primary & Secondary Buttons */
 .fm-btn-primary {
-  background: #3730a3;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: #ffffff;
   font-size: 0.95rem;
   font-weight: 600;
-  padding: 0.6rem 1.35rem;
-  border-radius: 8px;
+  padding: 0.65rem 1.45rem;
+  border-radius: 9999px;
   border: none;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -112,37 +121,45 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 1px 3px rgba(55, 48, 163, 0.2);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.45);
   font-family: inherit;
 }
 
 .fm-btn-primary:hover {
-  background: #312e81;
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(55, 48, 163, 0.25);
+  box-shadow: 0 0 28px rgba(99, 102, 241, 0.65);
+}
+
+.fm-signup-nav-btn {
+  padding: 0.55rem 1.4rem;
+  border-radius: 9999px;
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
 }
 
 .fm-btn-secondary {
-  background: #ffffff;
-  color: #0f172a;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
   font-size: 0.95rem;
   font-weight: 600;
-  padding: 0.6rem 1.35rem;
+  padding: 0.65rem 1.45rem;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(8px);
   font-family: inherit;
 }
 
 .fm-btn-secondary:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
@@ -150,9 +167,10 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: #e0e7ff;
-  color: #4338ca;
-  padding: 0.35rem 0.8rem;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  color: #c7d2fe;
+  padding: 0.35rem 0.85rem;
   border-radius: 9999px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -162,7 +180,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: #4338ca !important;
+  color: #818cf8 !important;
   font-weight: 600;
 }
 
@@ -170,10 +188,10 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  color: #64748b !important;
+  color: #94a3b8 !important;
 }
 .fm-logout-btn:hover {
-  color: #ef4444 !important;
+  color: #f87171 !important;
 }
 
 /* ==========================================================
@@ -193,58 +211,82 @@
 
 .fm-badge-pill {
   display: inline-block;
-  background: #e0e7ff;
-  color: #4338ca;
-  font-size: 0.82rem;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(129, 140, 248, 0.3);
+  color: #c7d2fe;
+  font-size: 0.84rem;
   font-weight: 600;
-  padding: 0.35rem 0.95rem;
+  padding: 0.38rem 1.05rem;
   border-radius: 9999px;
-  margin-bottom: 1.35rem;
+  margin-bottom: 1.5rem;
   letter-spacing: -0.01em;
 }
 
 .fm-hero-headline {
-  font-size: 3.6rem;
+  font-size: 3.75rem;
   font-weight: 800;
-  line-height: 1.12;
-  color: #0f172a;
+  line-height: 1.1;
+  color: #f8fafc;
   letter-spacing: -0.035em;
   margin-bottom: 1.35rem;
 }
 
+.fm-gradient-text {
+  background: linear-gradient(135deg, #a78bfa 0%, #818cf8 50%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
 .fm-hero-subtext {
-  font-size: 1.1rem;
-  color: #64748b;
-  line-height: 1.55;
-  max-width: 470px;
+  font-size: 1.12rem;
+  color: #94a3b8;
+  line-height: 1.6;
+  max-width: 480px;
   margin-bottom: 2.2rem;
 }
 
 .fm-hero-actions {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  gap: 1rem;
 }
 
 .fm-hero-btn-primary {
   font-size: 1.02rem;
-  padding: 0.8rem 1.65rem;
+  padding: 0.85rem 1.85rem;
   border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.6);
+}
+.fm-hero-btn-primary:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+  box-shadow: 0 0 35px rgba(99, 102, 241, 0.8);
 }
 
 .fm-hero-btn-secondary {
   font-size: 1.02rem;
-  padding: 0.8rem 1.65rem;
+  padding: 0.85rem 1.85rem;
   border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  backdrop-filter: blur(8px);
+}
+.fm-hero-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
-/* Hero Right: Card Visual */
+/* Hero Right: Card Visual (Matching Showcase In Screenshot) */
 .fm-preview-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(13, 18, 33, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 20px;
-  padding: 1.85rem;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .fm-card-section {
@@ -256,45 +298,49 @@
   font-size: 0.72rem;
   font-weight: 700;
   color: #64748b;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.75rem;
 }
 
 .fm-client-bubble {
-  background: #f8fafc;
-  border: 1px solid #f1f5f9;
+  background: rgba(22, 30, 49, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
-  padding: 1.15rem;
-  color: #1e293b;
-  font-size: 0.96rem;
-  line-height: 1.55;
+  padding: 1.25rem;
+  color: #cbd5e1;
+  font-size: 0.98rem;
+  line-height: 1.6;
 }
 
 .fm-pills-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  gap: 0.6rem;
 }
 
 .fm-output-pill {
-  background: #e0e7ff;
-  color: #4338ca;
-  font-size: 0.84rem;
+  background: #1e1b4b;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  color: #c4b5fd;
+  font-size: 0.85rem;
   font-weight: 500;
-  padding: 0.4rem 0.95rem;
+  padding: 0.45rem 1rem;
   border-radius: 9999px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
 }
 
 .fm-output-pill:hover {
-  background: #c7d2fe;
+  background: #2e1065;
+  border-color: #a855f7;
+  color: #ffffff;
   transform: translateY(-1px);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.35);
 }
 
-/* Bottom 4 Feature Cards */
+/* Bottom 4 Feature Cards (Matching Screenshot) */
 .fm-features-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -303,37 +349,39 @@
 }
 
 .fm-feature-item-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(13, 19, 35, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  padding: 1.65rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  padding: 1.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
 }
 
 .fm-feature-item-card:hover {
   transform: translateY(-3px);
-  border-color: #cbd5e1;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.15);
+  background: rgba(18, 26, 48, 0.8);
 }
 
 .fm-feature-card-title {
-  font-size: 1.12rem;
+  font-size: 1.15rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #f8fafc;
   margin-bottom: 0.5rem;
   letter-spacing: -0.01em;
 }
 
 .fm-feature-card-desc {
-  font-size: 0.9rem;
-  color: #64748b;
-  line-height: 1.5;
+  font-size: 0.92rem;
+  color: #94a3b8;
+  line-height: 1.55;
 }
 
 /* ==========================================================
-   Authentication Pages (Login & Signup)
+   Authentication Pages (Login & Signup - Dark Glassmorphism)
    ========================================================== */
 .fm-auth-page-wrapper {
   display: flex;
@@ -344,13 +392,14 @@
 }
 
 .fm-auth-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(13, 19, 33, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   padding: 2.5rem;
   width: 100%;
   max-width: 460px;
-  box-shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
 }
 
 .fm-auth-back-link {
@@ -359,15 +408,16 @@
   gap: 0.4rem;
   background: none;
   border: none;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.88rem;
   font-weight: 500;
   cursor: pointer;
   margin-bottom: 1.5rem;
   padding: 0;
+  transition: color 0.15s ease;
 }
 .fm-auth-back-link:hover {
-  color: #0f172a;
+  color: #f8fafc;
 }
 
 .fm-auth-header {
@@ -376,27 +426,30 @@
 }
 
 .fm-auth-icon-badge {
-  width: 48px;
-  height: 48px;
-  background: #e0e7ff;
-  border-radius: 12px;
+  width: 52px;
+  height: 52px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  color: #818cf8;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1rem auto;
+  margin: 0 auto 1.25rem auto;
 }
+
 
 .fm-auth-title {
   font-size: 1.6rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #f8fafc;
   letter-spacing: -0.02em;
   margin-bottom: 0.4rem;
 }
 
 .fm-auth-subtitle {
   font-size: 0.92rem;
-  color: #64748b;
+  color: #94a3b8;
   line-height: 1.5;
 }
 
@@ -410,14 +463,14 @@
   margin-bottom: 1.25rem;
 }
 .fm-auth-alert.error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
 }
 .fm-auth-alert.success {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #16a34a;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
 }
 
 .fm-auth-form {
@@ -435,7 +488,7 @@
 .fm-form-label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #334155;
+  color: #cbd5e1;
 }
 
 .fm-input-with-icon {
@@ -454,19 +507,20 @@
 .fm-form-input {
   width: 100%;
   padding: 0.75rem 0.9rem 0.75rem 2.4rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
   font-size: 0.94rem;
-  background: #ffffff;
-  color: #0f172a;
+  background: rgba(22, 30, 49, 0.7);
+  color: #f8fafc;
   transition: all 0.15s ease;
   font-family: inherit;
 }
 
 .fm-form-input:focus {
   outline: none;
-  border-color: #4338ca;
-  box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.12);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+  background: rgba(26, 36, 58, 0.85);
 }
 
 .fm-auth-submit-btn {
@@ -474,19 +528,20 @@
   padding: 0.8rem;
   font-size: 1rem;
   margin-top: 0.5rem;
+  border-radius: 10px;
 }
 
 .fm-auth-footer {
   text-align: center;
   margin-top: 1.5rem;
   font-size: 0.9rem;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .fm-auth-switch-btn {
   background: none;
   border: none;
-  color: #4338ca;
+  color: #818cf8;
   font-weight: 600;
   cursor: pointer;
   padding: 0;
@@ -494,16 +549,18 @@
 }
 .fm-auth-switch-btn:hover {
   text-decoration: underline;
+  color: #a78bfa;
 }
 
 /* ==========================================================
-   Modals (Auth Required & Sample Preview)
+   Modals (Auth Required & Sample Preview - Dark Cosmic)
    ========================================================== */
 .fm-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(5px);
+  background: rgba(3, 6, 15, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 200;
   display: flex;
   justify-content: center;
@@ -518,15 +575,18 @@
 }
 
 .fm-modal-card {
-  background: #ffffff;
+  background: rgba(13, 19, 33, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
   padding: 2.25rem;
   width: 100%;
   max-width: 500px;
   position: relative;
-  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
   max-height: 90vh;
   overflow-y: auto;
+  color: #f8fafc;
 }
 
 .fm-modal-close-btn {
@@ -542,10 +602,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.15s ease;
 }
 .fm-modal-close-btn:hover {
-  color: #0f172a;
-  background: #f1f5f9;
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .fm-modal-header {
@@ -554,26 +615,28 @@
 }
 
 .fm-modal-icon-badge {
-  width: 48px;
-  height: 48px;
-  background: #e0e7ff;
-  border-radius: 12px;
+  width: 52px;
+  height: 52px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  color: #818cf8;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 0.9rem auto;
+  margin: 0 auto 1rem auto;
 }
 
 .fm-modal-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #f8fafc;
   margin-bottom: 0.4rem;
 }
 
 .fm-modal-subtitle {
   font-size: 0.92rem;
-  color: #64748b;
+  color: #94a3b8;
   line-height: 1.5;
 }
 
@@ -581,10 +644,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  background: #f8fafc;
-  border: 1px solid #f1f5f9;
+  background: rgba(22, 30, 49, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  padding: 1.1rem;
+  padding: 1.15rem;
   margin-bottom: 1.5rem;
 }
 
@@ -593,7 +656,7 @@
   align-items: center;
   gap: 0.65rem;
   font-size: 0.88rem;
-  color: #334155;
+  color: #cbd5e1;
   font-weight: 500;
 }
 
@@ -607,6 +670,7 @@
   width: 100%;
   padding: 0.8rem;
   font-size: 0.95rem;
+  border-radius: 10px;
 }
 
 .fm-modal-footer {
@@ -617,7 +681,7 @@
 .fm-modal-sample-link {
   background: none;
   border: none;
-  color: #4338ca;
+  color: #818cf8;
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
@@ -625,9 +689,11 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.3rem;
+  transition: color 0.15s ease;
 }
 .fm-modal-sample-link:hover {
   text-decoration: underline;
+  color: #a78bfa;
 }
 
 /* Sample Modal Card Enlarged */
@@ -643,8 +709,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: #e0e7ff;
-  color: #4338ca;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  color: #c7d2fe;
   font-size: 0.8rem;
   font-weight: 600;
   padding: 0.25rem 0.75rem;
@@ -655,13 +722,13 @@
 .fm-sample-title {
   font-size: 1.6rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #f8fafc;
   margin-bottom: 0.3rem;
 }
 
 .fm-sample-subtitle {
   font-size: 0.92rem;
-  color: #64748b;
+  color: #94a3b8;
   margin-bottom: 0.8rem;
 }
 
@@ -672,8 +739,9 @@
 }
 
 .fm-meta-chip {
-  background: #f1f5f9;
-  color: #334155;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
   font-size: 0.82rem;
   font-weight: 600;
   padding: 0.35rem 0.8rem;
@@ -683,7 +751,7 @@
 .fm-sample-tabs {
   display: flex;
   gap: 0.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   margin-bottom: 1.25rem;
 }
 
@@ -697,16 +765,17 @@
   padding: 0.65rem 0.9rem;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
   cursor: pointer;
   margin-bottom: -1px;
+  transition: all 0.15s ease;
 }
 .fm-sample-tab-btn:hover {
-  color: #0f172a;
+  color: #f8fafc;
 }
 .fm-sample-tab-btn.active {
-  color: #4338ca;
-  border-bottom-color: #4338ca;
+  color: #818cf8;
+  border-bottom-color: #818cf8;
 }
 
 .fm-sample-body {
@@ -722,12 +791,12 @@
 .fm-sample-block h4 {
   font-size: 0.98rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #f8fafc;
   margin-bottom: 0.5rem;
 }
 .fm-sample-block p {
   font-size: 0.92rem;
-  color: #475569;
+  color: #cbd5e1;
   line-height: 1.55;
 }
 
@@ -739,14 +808,14 @@
 }
 .fm-sample-list li {
   font-size: 0.9rem;
-  color: #334155;
+  color: #cbd5e1;
   padding-left: 1.2rem;
   position: relative;
   line-height: 1.45;
 }
 .fm-sample-list li::before {
   content: '•';
-  color: #4338ca;
+  color: #818cf8;
   font-weight: bold;
   position: absolute;
   left: 0;
@@ -759,8 +828,8 @@
 }
 
 .fm-sample-stack-item {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: rgba(22, 30, 49, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   padding: 0.65rem 0.85rem;
   display: flex;
@@ -771,11 +840,11 @@
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: #4338ca;
+  color: #a78bfa;
 }
 .fm-stack-val {
   font-size: 0.85rem;
-  color: #1e293b;
+  color: #f8fafc;
   font-weight: 500;
 }
 
@@ -785,7 +854,7 @@
   align-items: center;
   font-size: 0.88rem;
   font-weight: 600;
-  color: #334155;
+  color: #cbd5e1;
   margin-bottom: 0.6rem;
 }
 
@@ -793,26 +862,28 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 0.35rem 0.75rem;
   border-radius: 6px;
   font-size: 0.82rem;
   font-weight: 600;
+  color: #f8fafc;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 .fm-btn-copy:hover {
-  background: #e2e8f0;
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .fm-proposal-pre {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: rgba(8, 12, 23, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 1.2rem;
   font-size: 0.85rem;
   font-family: var(--font-mono);
-  color: #1e293b;
+  color: #cbd5e1;
   white-space: pre-wrap;
   line-height: 1.5;
   max-height: 350px;
@@ -820,7 +891,7 @@
 }
 
 .fm-sample-modal-footer {
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 1.25rem;
   display: flex;
   justify-content: space-between;
@@ -829,11 +900,11 @@
 }
 .fm-sample-modal-footer p {
   font-size: 0.9rem;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 /* ==========================================================
-   Features Page & How It Works Page Styles
+   Features Page & How It Works Page Styles (Dark Cosmic)
    ========================================================== */
 .fm-page-wrapper {
   padding: 4rem 0 5rem 0;
@@ -848,7 +919,7 @@
 .fm-page-title {
   font-size: 3rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #f8fafc;
   line-height: 1.15;
   letter-spacing: -0.03em;
   margin-top: 0.8rem;
@@ -857,7 +928,7 @@
 
 .fm-page-subtitle {
   font-size: 1.12rem;
-  color: #64748b;
+  color: #94a3b8;
   line-height: 1.55;
 }
 
@@ -869,24 +940,27 @@
 }
 
 .fm-feature-detail-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(13, 19, 35, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   padding: 2rem;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
+  backdrop-filter: blur(12px);
 }
 .fm-feature-detail-card:hover {
   transform: translateY(-3px);
-  border-color: #cbd5e1;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15);
 }
 
 .fm-feature-icon-box {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: #e0e7ff;
+  background: #1e1b4b;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: #a78bfa;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -898,7 +972,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #4338ca;
+  color: #818cf8;
   display: block;
   margin-bottom: 0.4rem;
 }
@@ -906,25 +980,26 @@
 .fm-feature-heading {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #f8fafc;
   margin-bottom: 0.6rem;
   letter-spacing: -0.01em;
 }
 
 .fm-feature-body {
   font-size: 0.92rem;
-  color: #64748b;
+  color: #94a3b8;
   line-height: 1.55;
 }
 
 /* Comparison Box */
 .fm-comparison-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(13, 19, 35, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   padding: 3rem 2.5rem;
   margin-bottom: 4rem;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
 }
 
 .fm-comparison-header {
@@ -934,11 +1009,11 @@
 .fm-comparison-header h2 {
   font-size: 1.85rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #f8fafc;
   margin-bottom: 0.4rem;
 }
 .fm-comparison-header p {
-  color: #64748b;
+  color: #94a3b8;
   font-size: 1rem;
 }
 
@@ -953,21 +1028,21 @@
   padding: 1.75rem;
 }
 .fm-comp-col.negative {
-  background: #fef2f2;
-  border: 1px solid #fee2e2;
+  background: rgba(69, 10, 10, 0.3);
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 .fm-comp-col.negative h4 {
-  color: #b91c1c;
+  color: #f87171;
   font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 1rem;
 }
 .fm-comp-col.positive {
-  background: #f0fdf4;
-  border: 1px solid #dcfce7;
+  background: rgba(6, 78, 59, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 .fm-comp-col.positive h4 {
-  color: #15803d;
+  color: #34d399;
   font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 1rem;
@@ -979,10 +1054,15 @@
   flex-direction: column;
   gap: 0.75rem;
 }
-.fm-comp-col li {
+.fm-comp-col.negative li {
   font-size: 0.92rem;
   line-height: 1.5;
-  color: #334155;
+  color: #fca5a5;
+}
+.fm-comp-col.positive li {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #a7f3d0;
 }
 
 /* Timeline in How It Works */
@@ -998,11 +1078,12 @@
   display: grid;
   grid-template-columns: 80px 1fr;
   gap: 1.75rem;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(13, 19, 35, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   padding: 2rem;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
 }
 
 .fm-step-badge-col {
@@ -1014,8 +1095,9 @@
   width: 56px;
   height: 56px;
   border-radius: 14px;
-  background: #e0e7ff;
-  color: #4338ca;
+  background: #1e1b4b;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: #a78bfa;
   font-size: 1.4rem;
   font-weight: 800;
   display: flex;
@@ -1027,7 +1109,7 @@
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: #4338ca;
+  color: #818cf8;
   letter-spacing: 0.05em;
   display: block;
   margin-bottom: 0.35rem;
@@ -1036,36 +1118,37 @@
 .fm-step-title {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #f8fafc;
   margin-bottom: 0.65rem;
 }
 
 .fm-step-desc {
   font-size: 0.95rem;
-  color: #64748b;
+  color: #94a3b8;
   line-height: 1.55;
   margin-bottom: 1rem;
 }
 
 .fm-step-code-snippet pre {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: rgba(8, 12, 23, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   padding: 0.85rem 1rem;
   font-size: 0.85rem;
-  color: #1e293b;
+  color: #cbd5e1;
   font-family: var(--font-mono);
   white-space: pre-wrap;
 }
 
 .fm-workflow-demo-box {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(13, 19, 35, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   padding: 2.5rem;
   max-width: 860px;
   margin: 0 auto 4rem auto;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
 }
 
 .fm-demo-box-header {
@@ -1077,11 +1160,11 @@
 .fm-demo-box-header h3 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #f8fafc;
 }
 .fm-demo-box-header p {
   font-size: 0.9rem;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .fm-demo-grid {
@@ -1093,7 +1176,7 @@
 .fm-demo-label {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #475569;
+  color: #94a3b8;
   display: block;
   margin-bottom: 0.4rem;
 }
@@ -1105,58 +1188,62 @@
   line-height: 1.5;
 }
 .fm-demo-quote.bad {
-  background: #fef2f2;
-  border: 1px solid #fee2e2;
-  color: #991b1b;
+  background: rgba(69, 10, 10, 0.3);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
 }
 .fm-demo-quote.good {
-  background: #f0fdf4;
-  border: 1px solid #dcfce7;
-  color: #166534;
+  background: rgba(6, 78, 59, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #a7f3d0;
 }
 
 /* CTA Banner */
 .fm-cta-banner {
-  background: #3730a3;
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
   color: #ffffff;
   border-radius: 20px;
-  padding: 3rem;
+  padding: 3.25rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 2rem;
-  box-shadow: 0 12px 30px rgba(55, 48, 163, 0.25);
+  box-shadow: 0 12px 35px rgba(99, 102, 241, 0.25);
+  border: 1px solid rgba(99, 102, 241, 0.35);
 }
 
 .fm-cta-content h2 {
-  font-size: 1.85rem;
+  font-size: 1.95rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   margin-bottom: 0.4rem;
 }
 .fm-cta-content p {
   color: #c7d2fe;
-  font-size: 1rem;
+  font-size: 1.05rem;
 }
 
 .fm-cta-btn {
   background: #ffffff;
-  color: #3730a3;
+  color: #1e1b4b;
   font-size: 1rem;
-  padding: 0.85rem 1.75rem;
+  font-weight: 700;
+  padding: 0.85rem 1.85rem;
   white-space: nowrap;
+  border-radius: 9999px;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
 }
 .fm-cta-btn:hover {
-  background: #f8fafc;
-  color: #312e81;
+  background: #f1f5f9;
+  transform: translateY(-1px);
 }
 
 /* ==========================================================
-   Universal Footer
+   Universal Footer (Dark Themed)
    ========================================================== */
 .fm-footer {
-  background: #ffffff;
-  border-top: 1px solid #e2e8f0;
+  background: #060913;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   padding: 3.5rem 0 2rem 0;
   margin-top: auto;
 }
@@ -1179,14 +1266,14 @@
 .fm-footer-logo {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #1e1b4b;
+  color: #ffffff;
   display: block;
   margin-bottom: 0.5rem;
 }
 
 .fm-footer-brand p {
   font-size: 0.9rem;
-  color: #64748b;
+  color: #94a3b8;
   line-height: 1.5;
 }
 
@@ -1198,24 +1285,26 @@
 .fm-footer-links button {
   background: none;
   border: none;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.92rem;
   font-weight: 500;
   cursor: pointer;
+  transition: color 0.15s ease;
 }
 .fm-footer-links button:hover {
-  color: #0f172a;
+  color: #ffffff;
 }
 
 .fm-footer-bottom {
   max-width: 1180px;
   margin: 0 auto;
   padding: 1.5rem 1.5rem 0 1.5rem;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   text-align: center;
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: #64748b;
 }
+
 
 /* ==========================================================
    AI Analyzer Workspace Theme Adjustments
